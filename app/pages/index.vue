@@ -1,9 +1,9 @@
 <script setup>
 const { data: containers } = await useFetch("/api/containers")
 
-const buildURL = (subdomain) => {
-  return `https://${subdomain}.maelbelliard.fr`
-}
+const buildURL = subdomain => `https://${subdomain}.maelbelliard.fr`
+
+const findContainer = name => containers.value?.find(c => c.name === name)
 
 const links = [
   {
@@ -12,7 +12,7 @@ const links = [
     to: buildURL('traefik'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "traefik")
+    container: findContainer("traefik")
   },
   {
     label: 'homeassistant',
@@ -20,7 +20,7 @@ const links = [
     to: buildURL('ha'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "homeassistant")
+    container: findContainer("homeassistant")
   },
   {
     label: 'portail',
@@ -28,7 +28,7 @@ const links = [
     to: buildURL('portail'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "portail")
+    container: findContainer("portail")
   },
   {
     label: 'beszel',
@@ -36,12 +36,12 @@ const links = [
     to: buildURL('beszel'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "beszel")
+    container: findContainer("beszel")
   },
   {
     label: 'beszel-agent',
     tag: ['docker'],
-    container: containers.value?.find(c => c.name === "beszel-agent")
+    container: findContainer(c => c.name === "beszel-agent")
   },
   {
     label: 'uptime-kuma',
@@ -49,7 +49,7 @@ const links = [
     to: buildURL('uptime'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "uptime-kuma")
+    container: findContainer("uptime-kuma")
   },
   {
     label: 'zigbee2mqtt',
@@ -57,7 +57,7 @@ const links = [
     to: buildURL('zigbee'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "zigbee2mqtt")
+    container: findContainer("zigbee2mqtt")
   },
   {
     label: 'portainer',
@@ -65,7 +65,7 @@ const links = [
     to: buildURL('portainer'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "portainer")
+    container: findContainer(c => c.name === "portainer")
   },
   {
     label: 'adguardhome',
@@ -73,12 +73,12 @@ const links = [
     to: buildURL('adguard'),
     external: true,
     target: '_blank',
-    container: containers.value?.find(c => c.name === "adguardhome")
+    container: findContainer("adguardhome")
   },
   {
     label: 'mosquitto',
     tag: ['docker'],
-    container: containers.value?.find(c => c.name === "mosquitto")
+    container: findContainer(c => c.name === "mosquitto")
   },
   {
     label: 'tailscale',
@@ -93,17 +93,30 @@ const links = [
     target: '_blank',
   },
 ]
+
+const reachable = async (url) => {
+  if (!url) return 'unknown'
+  try {
+    const res = await $fetch('/api/ping', { query: { url } })
+    return res.success ? 'up' : 'down'
+  } catch {
+    return 'down'
+  }
+}
+
+const { data: enrichedLinks, pending } = useAsyncData('links-state', () =>
+    Promise.all(links.map(async link => ({ ...link, state: await reachable(link.to) }))),
+  { default: () => links.map(l => ({ ...l, state: 'unknown' })) }
+)
 </script>
 
 <template>
   <UContainer>
-    <h1 class="text-2xl font-bold my-6">
-      Links
-    </h1>
+    <h1 class="text-2xl font-bold my-6">Links</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <ULink
-        v-for="link in links"
+        v-for="link in enrichedLinks"
         :key="link.label"
         :to="link.to"
         :external="link.external"
@@ -113,27 +126,21 @@ const links = [
         <UCard>
           <template #header>
             <div class="flex justify-between items-center">
-              <span class="font-semibold">
-                {{ link.label }}
-              </span>
-              <Ping :state="link.state === 'running' ? 'up' : 'down'" />
+              <span class="font-semibold">{{ link.label }}</span>
+              <Ping :state="link.state" />
             </div>
             <div v-if="link.tag" class="mt-1">
               <UBadge
                 v-for="tag in link.tag"
+                :key="tag"
                 :label="tag"
                 variant="outline"
               />
             </div>
           </template>
           <div v-if="link.container" class="grid grid-cols-[1fr_auto] justify-between items-center">
-            <p class="text-sm text-gray-400 truncate">
-              {{ link.container.image }}
-            </p>
-
-            <p class="text-xs ms-4">
-              {{ link.container.status }}
-            </p>
+            <p class="text-sm text-gray-400 truncate">{{ link.container.image }}</p>
+            <p class="text-xs ms-4">{{ link.container.status }}</p>
           </div>
         </UCard>
       </ULink>
