@@ -5,10 +5,17 @@ const buildURL = subdomain => `https://${subdomain}.maelbelliard.fr`
 
 const findContainer = name => containers.value?.find(c => c.name === name)
 
+const tags = {
+  docker: {
+    label: 'docker',
+    color: 'info'
+  }
+}
+
 const links = [
   {
     label: 'traefik',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('traefik'),
     external: true,
     target: '_blank',
@@ -16,7 +23,7 @@ const links = [
   },
   {
     label: 'homeassistant',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('ha'),
     external: true,
     target: '_blank',
@@ -24,7 +31,7 @@ const links = [
   },
   {
     label: 'portail',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('portail'),
     external: true,
     target: '_blank',
@@ -32,7 +39,7 @@ const links = [
   },
   {
     label: 'beszel',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('beszel'),
     external: true,
     target: '_blank',
@@ -40,12 +47,12 @@ const links = [
   },
   {
     label: 'beszel-agent',
-    tag: ['docker'],
-    container: findContainer(c => c.name === "beszel-agent")
+    tag: [tags.docker],
+    container: findContainer("beszel-agent")
   },
   {
     label: 'uptime-kuma',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('uptime'),
     external: true,
     target: '_blank',
@@ -53,7 +60,7 @@ const links = [
   },
   {
     label: 'zigbee2mqtt',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('zigbee'),
     external: true,
     target: '_blank',
@@ -61,15 +68,15 @@ const links = [
   },
   {
     label: 'portainer',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('portainer'),
     external: true,
     target: '_blank',
-    container: findContainer(c => c.name === "portainer")
+    container: findContainer("portainer")
   },
   {
     label: 'adguardhome',
-    tag: ['docker'],
+    tag: [tags.docker],
     to: buildURL('adguard'),
     external: true,
     target: '_blank',
@@ -77,8 +84,8 @@ const links = [
   },
   {
     label: 'mosquitto',
-    tag: ['docker'],
-    container: findContainer(c => c.name === "mosquitto")
+    tag: [tags.docker],
+    container: findContainer("mosquitto")
   },
   {
     label: 'tailscale',
@@ -104,9 +111,33 @@ const reachable = async (url) => {
   }
 }
 
-const { data: enrichedLinks, pending } = useAsyncData('links-state', () =>
-    Promise.all(links.map(async link => ({ ...link, state: await reachable(link.to) }))),
-  { default: () => links.map(l => ({ ...l, state: 'unknown' })) }
+const computeState = (reachableState, container) => {
+  if (container) {
+    const containerUp = container.state === 'running'
+    if (!containerUp) return 'down'
+    if (reachableState === 'unknown') return 'up'
+    return reachableState
+  }
+  return reachableState
+}
+
+const { data: enrichedLinks } = useAsyncData(
+  'links-state',
+  () => Promise.all(links.map(async (link) => {
+    const reachableState = await reachable(link.to)
+    return {
+      ...link,
+      reachable: reachableState,
+      state: computeState(reachableState, link.container)
+    }
+  })),
+  {
+    default: () => links.map(l => ({
+      ...l,
+      reachable: 'unknown',
+      state: 'unknown'
+    }))
+  }
 )
 </script>
 
@@ -129,17 +160,22 @@ const { data: enrichedLinks, pending } = useAsyncData('links-state', () =>
               <span class="font-semibold">{{ link.label }}</span>
               <Ping :state="link.state" />
             </div>
-            <div v-if="link.tag" class="mt-1">
+            <div v-if="link.tag" class="mt-1 flex gap-1">
               <UBadge
                 v-for="tag in link.tag"
                 :key="tag"
-                :label="tag"
+                :label="tag.label"
                 variant="outline"
+                :color="tag.color"
               />
             </div>
           </template>
-          <div v-if="link.container" class="grid grid-cols-[1fr_auto] justify-between items-center">
-            <p class="text-sm text-gray-400 truncate">{{ link.container.image }}</p>
+          <div v-if="link.to" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
+            <p class="text-sm truncate">{{ link.to }}</p>
+            <p class="text-xs ms-4">{{ link.reachable }}</p>
+          </div>
+          <div v-if="link.container" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
+            <p class="text-sm truncate">{{ link.container.image }}</p>
             <p class="text-xs ms-4">{{ link.container.status }}</p>
           </div>
         </UCard>
