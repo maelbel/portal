@@ -145,16 +145,16 @@ const { data: enrichedLinks } = useAsyncData(
   <UContainer>
     <h1 class="text-2xl font-bold my-6">Links</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
       <ULink
         v-for="link in enrichedLinks"
         :key="link.label"
         :to="link.to"
         :external="link.external"
         :target="link.target"
-        class="text-left"
+        class="text-left h-full"
       >
-        <UCard>
+        <UCard :ui="{ root: 'h-full'}">
           <template #header>
             <div class="flex justify-between items-center">
               <span class="font-semibold">{{ link.label }}</span>
