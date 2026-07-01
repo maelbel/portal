@@ -1,0 +1,23 @@
+services:
+  portail:
+    container_name: portail
+    build:
+      context: .
+      target: development
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - proxy
+
+volumes:
+  node_modules:
+    name: portail_node_modules
+
+networks:
+  proxy:
+    external: true
