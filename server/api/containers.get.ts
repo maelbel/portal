@@ -1,5 +1,10 @@
-import { listContainers } from "../utils/docker"
-
-export default defineEventHandler(async () => {
-  return await listContainers()
-})
+export default defineCachedEventHandler(
+  async () => {
+    return await listContainers()
+  },
+  {
+    maxAge: 5,
+    swr: true,
+    name: 'containers-list'
+  }
+)

@@ -1,1 +1,6 @@
 node_modules
+.output
+.nuxt
+.git
+*.log
+.env*
