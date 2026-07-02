@@ -26,7 +26,7 @@ useSeoMeta({
 
 <template>
   <UApp>
-    <UHeader>
+    <UHeader :toggle="false">
       <template #left>
         <NuxtLink to="/">
           Portail
@@ -50,5 +50,7 @@ useSeoMeta({
     <UMain>
       <NuxtPage />
     </UMain>
+
+    <UFooter />
   </UApp>
 </template>
