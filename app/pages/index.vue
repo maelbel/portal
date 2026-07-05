@@ -1,107 +1,31 @@
-<script setup>
-const { data: containers } = await useFetch("/api/containers")
+<script setup lang="ts">
+import { useServicesStore } from '~/stores/services'
 
-const buildURL = subdomain => `https://${subdomain}.maelbelliard.fr`
+const { data: containers } = await useFetch('/api/containers')
+const toast = useToast()
+const servicesStore = useServicesStore()
+const {
+  isCreateModalOpen,
+  isEditModalOpen,
+  newService,
+  editingService,
+  openCreateModal,
+  closeCreateModal,
+  openEditModal,
+  closeEditModal,
+  createService,
+  updateService
+} = useServiceModal()
 
-const findContainer = name => containers.value?.find(c => c.name === name)
+const normalizeContainerName = (name: string) => name.replace(/^\/+/, '').toLowerCase()
 
-const tags = {
-  docker: {
-    label: 'docker',
-    color: 'info'
-  }
-}
+const findContainer = (name: string) => containers.value?.find((container: { name: string }) => normalizeContainerName(container.name) === normalizeContainerName(name))
 
-const links = [
-  {
-    label: 'traefik',
-    tag: [tags.docker],
-    to: buildURL('traefik'),
-    external: true,
-    target: '_blank',
-    container: findContainer("traefik")
-  },
-  {
-    label: 'homeassistant',
-    tag: [tags.docker],
-    to: buildURL('ha'),
-    external: true,
-    target: '_blank',
-    container: findContainer("homeassistant")
-  },
-  {
-    label: 'portail',
-    tag: [tags.docker],
-    to: buildURL('portail'),
-    external: true,
-    target: '_blank',
-    container: findContainer("portail")
-  },
-  {
-    label: 'beszel',
-    tag: [tags.docker],
-    to: buildURL('beszel'),
-    external: true,
-    target: '_blank',
-    container: findContainer("beszel")
-  },
-  {
-    label: 'beszel-agent',
-    tag: [tags.docker],
-    container: findContainer("beszel-agent")
-  },
-  {
-    label: 'uptime-kuma',
-    tag: [tags.docker],
-    to: buildURL('uptime'),
-    external: true,
-    target: '_blank',
-    container: findContainer("uptime-kuma")
-  },
-  {
-    label: 'zigbee2mqtt',
-    tag: [tags.docker],
-    to: buildURL('zigbee'),
-    external: true,
-    target: '_blank',
-    container: findContainer("zigbee2mqtt")
-  },
-  {
-    label: 'portainer',
-    tag: [tags.docker],
-    to: buildURL('portainer'),
-    external: true,
-    target: '_blank',
-    container: findContainer("portainer")
-  },
-  {
-    label: 'adguardhome',
-    tag: [tags.docker],
-    to: buildURL('adguard'),
-    external: true,
-    target: '_blank',
-    container: findContainer("adguardhome")
-  },
-  {
-    label: 'mosquitto',
-    tag: [tags.docker],
-    container: findContainer("mosquitto")
-  },
-  {
-    label: 'tailscale',
-    to: "https://login.tailscale.com/",
-    external: true,
-    target: '_blank',
-  },
-  {
-    label: 'freebox',
-    to: "http://mafreebox.freebox.fr/",
-    external: true,
-    target: '_blank',
-  },
-]
+const enrichedServices = ref<Array<Record<string, any>>>([])
 
-const reachable = async (url) => {
+const { services, loading } = storeToRefs(servicesStore)
+
+const reachable = async (url: string) => {
   if (!url) return 'unknown'
   try {
     const res = await $fetch('/api/ping', { query: { url } })
@@ -111,75 +35,91 @@ const reachable = async (url) => {
   }
 }
 
-const computeState = (reachableState, container) => {
-  if (container) {
-    const containerUp = container.state === 'running'
-    if (!containerUp) return 'down'
-    if (reachableState === 'unknown') return 'up'
-    return reachableState
-  }
-  return reachableState
+const computeState = (reachableState: string, container: Record<string, any> | undefined, containerName?: string | null) => {
+  if (reachableState === 'down' || reachableState === 'unknown') return 'down'
+  if (containerName && !container) return 'down'
+  if (container && container.state !== 'running') return 'down'
+  return 'up'
 }
 
-const { data: enrichedLinks } = useAsyncData(
-  'links-state',
-  () => Promise.all(links.map(async (link) => {
-    const reachableState = await reachable(link.to)
+const refreshServiceStates = async () => {
+  enrichedServices.value = await Promise.all(services.value.map(async (service: Record<string, any>) => {
+    const reachableState = await reachable(service.url)
+    const container = service.containerName ? findContainer(service.containerName) : undefined
+
     return {
-      ...link,
+      ...service,
       reachable: reachableState,
-      state: computeState(reachableState, link.container)
+      state: computeState(reachableState, container, service.containerName)
     }
-  })),
-  {
-    default: () => links.map(l => ({
-      ...l,
-      reachable: 'unknown',
-      state: 'unknown'
-    }))
+  }))
+}
+
+watch([services, containers], () => {
+  void refreshServiceStates()
+}, { deep: true, immediate: true })
+
+const deleteService = async (service: Record<string, any>) => {
+  try {
+    await servicesStore.deleteService(service.id)
+    toast.add({ title: 'Service deleted', description: 'The service has been removed.', color: 'success' })
+  } catch {
+    toast.add({ title: 'Deletion failed', description: 'The service could not be removed.', color: 'error' })
   }
-)
+}
 </script>
 
 <template>
   <UContainer>
-    <h1 class="text-2xl font-bold my-6">Links</h1>
+    <div class="flex items-center justify-between my-6">
+      <h1 class="text-2xl font-bold">Services</h1>
+      <UButton label="Add service" color="primary" @click="openCreateModal" />
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-      <ULink
-        v-for="link in enrichedLinks"
-        :key="link.label"
-        :to="link.to"
-        :external="link.external"
-        :target="link.target"
-        class="text-left h-full"
-      >
-        <UCard :ui="{ root: 'h-full'}">
-          <template #header>
-            <div class="flex justify-between items-center">
-              <span class="font-semibold">{{ link.label }}</span>
-              <Ping :state="link.state" />
-            </div>
-            <div v-if="link.tag" class="mt-1 flex gap-1">
-              <UBadge
-                v-for="tag in link.tag"
-                :key="tag"
-                :label="tag.label"
-                variant="outline"
-                :color="tag.color"
-              />
-            </div>
-          </template>
-          <div v-if="link.to" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
-            <p class="text-sm truncate">{{ link.to }}</p>
-            <p class="text-xs ms-4">{{ link.reachable }}</p>
-          </div>
-          <div v-if="link.container" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
-            <p class="text-sm truncate">{{ link.container.image }}</p>
-            <p class="text-xs ms-4">{{ link.container.status }}</p>
-          </div>
-        </UCard>
-      </ULink>
+    <USeparator />
+
+    <ServiceForm
+      v-if="isCreateModalOpen"
+      v-model="newService"
+      title="Add a service"
+      submit-label="Create"
+      @submit="createService"
+      @cancel="closeCreateModal"
+    />
+
+    <ServiceForm
+      v-if="isEditModalOpen"
+      v-model="editingService"
+      title="Edit service"
+      submit-label="Update"
+      @submit="updateService"
+      @cancel="closeEditModal"
+    />
+
+    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-4">
+      <div v-for="index in 3" :key="index" class="h-full rounded-lg border border-default/20 bg-default/5 p-4 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <USkeleton class="h-5 w-32" />
+          <USkeleton class="h-6 w-6 rounded-full" />
+        </div>
+        <div class="flex gap-2">
+          <USkeleton class="h-6 w-16 rounded-full" />
+          <USkeleton class="h-6 w-20 rounded-full" />
+        </div>
+        <USkeleton class="h-4 w-full" />
+        <USkeleton class="h-4 w-3/4" />
+      </div>
+    </div>
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-4">
+      <ServiceCard
+        v-for="service in enrichedServices"
+        :key="service.id"
+        :service="service"
+        :container="findContainer(service.containerName)"
+        @edit="openEditModal"
+        @delete="deleteService"
+      />
     </div>
   </UContainer>
 </template>

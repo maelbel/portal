@@ -2,5 +2,13 @@ node_modules
 .output
 .nuxt
 .git
-*.log
-.env*
+.gitignore
+.env
+.env.*
+npm-debug.log*
+Dockerfile
+docker-compose*.yml
+README.md
+.DS_Store
+.vscode
+.idea

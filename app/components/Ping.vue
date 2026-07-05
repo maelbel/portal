@@ -8,12 +8,24 @@ const {
 }>()
 
 const palette = {
-  up:      { primary: 'bg-green-500',   accent: 'bg-green-400',   ping: true  },
-  down:    { primary: 'bg-red-500',     accent: 'bg-red-400',     ping: false },
-  unknown: { primary: 'bg-neutral-500', accent: 'bg-neutral-400', ping: false }
-} as const
+  up: {
+    primary: 'bg-green-500',
+    accent: 'bg-green-400',
+    ping: true
+  },
+  down: {
+    primary: 'bg-red-500',
+    accent: 'bg-red-400',
+    ping: false
+  },
+  unknown: {
+    primary: 'bg-neutral-500',
+    accent: 'bg-neutral-400',
+    ping: false
+  }
+}
 
-const colors = palette[state ?? 'unknown'] ?? palette.unknown
+const colors = computed(() => palette[state ?? 'unknown'] ?? palette.unknown)
 </script>
 
 <template>
