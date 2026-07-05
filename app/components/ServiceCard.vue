@@ -52,7 +52,7 @@ const handleDelete = () => {
         :to="service.url"
         :external="Boolean(service.url?.startsWith('http'))"
         :target="'_blank'"
-        class="block"
+        class="block w-full text-left"
       >
         <div v-if="service.url" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
           <p class="text-sm truncate">{{ service.url }}</p>
