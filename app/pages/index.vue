@@ -50,8 +50,8 @@ const filteredServices = computed(() => {
 
   const sorted = [...filtered]
   sorted.sort((a: Record<string, any>, b: Record<string, any>) => {
-    const nameA = String(a.name ?? '').toLowerCase()
-    const nameB = String(b.name ?? '').toLowerCase()
+    const nameA = String(a.label ?? '').toLowerCase()
+    const nameB = String(b.label ?? '').toLowerCase()
     const stateA = String(a.state ?? 'unknown')
     const stateB = String(b.state ?? 'unknown')
 
@@ -81,7 +81,7 @@ const reachable = async (url: string) => {
   }
 }
 
-const computeState = (reachableState: string, container: Record<string, any> | undefined, containerName?: string | null, hasUrl = false) => {
+const computeState = (reachableState: string, container: Record<string, unknown> | undefined, containerName?: string | null, hasUrl = false) => {
   const hasContainerName = Boolean(containerName?.trim())
 
   if (!hasUrl && !hasContainerName) return 'unknown'
@@ -93,7 +93,7 @@ const computeState = (reachableState: string, container: Record<string, any> | u
 }
 
 const refreshServiceStates = async () => {
-  enrichedServices.value = await Promise.all(services.value.map(async (service: Record<string, any>) => {
+  enrichedServices.value = await Promise.all(services.value.map(async (service: Record<string, string>) => {
     const hasUrl = Boolean(service.url?.trim())
     const hasContainerName = Boolean(service.containerName?.trim())
     const reachableState = hasUrl ? await reachable(service.url) : 'unknown'
@@ -128,7 +128,8 @@ const deleteService = async (service: Record<string, any>) => {
       <h1 class="text-2xl font-bold">Services</h1>
       <UButton
         label="Add service"
-        color="primary" @click="openCreateModal"
+        color="primary"
+        @click="openCreateModal"
       />
     </div>
 
