@@ -24,7 +24,13 @@ const items = [
 </script>
 
 <template>
-  <UDropdownMenu :items="items" :ui="{ content: 'w-36' }">
+  <UDropdownMenu
+    :items="items"
+    :content="{
+      align: 'start',
+      side: 'right'
+    }"
+  >
     <template #default>
       <UButton
         icon="i-lucide-ellipsis"
