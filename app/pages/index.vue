@@ -28,6 +28,11 @@ const sortBy = ref('name-asc')
 
 const { services, loading } = storeToRefs(servicesStore)
 
+const isMounted = ref(false)
+onMounted(() => {
+  isMounted.value = true
+})
+
 const filteredServices = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   const sourceServices = enrichedServices.value.length > 0 ? enrichedServices.value : (services.value ?? [])
@@ -102,9 +107,10 @@ const refreshServiceStates = async () => {
   }))
 }
 
-watch([services, containers], () => {
+watch([services, containers, isMounted], () => {
+  if (!isMounted.value) return
   void refreshServiceStates()
-}, { deep: true, immediate: true })
+}, { deep: true })
 
 const deleteService = async (service: Record<string, any>) => {
   try {
@@ -120,7 +126,10 @@ const deleteService = async (service: Record<string, any>) => {
   <UContainer>
     <div class="flex items-center justify-between my-6">
       <h1 class="text-2xl font-bold">Services</h1>
-      <UButton label="Add service" color="primary" @click="openCreateModal" />
+      <UButton
+        label="Add service"
+        color="primary" @click="openCreateModal"
+      />
     </div>
 
     <USeparator />
@@ -176,24 +185,18 @@ const deleteService = async (service: Record<string, any>) => {
       @cancel="closeEditModal"
     />
 
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-4">
-      <div v-for="index in 3" :key="index" class="h-full rounded-lg border border-default/20 bg-default/5 p-4 space-y-3">
-        <div class="flex items-center justify-between gap-2">
-          <USkeleton class="h-5 w-32" />
-          <USkeleton class="h-6 w-6 rounded-full" />
-        </div>
-        <div class="flex gap-2">
-          <USkeleton class="h-6 w-16 rounded-full" />
-          <USkeleton class="h-6 w-20 rounded-full" />
-        </div>
-        <USkeleton class="h-4 w-full" />
-        <USkeleton class="h-4 w-3/4" />
-      </div>
-    </div>
+    <ClientOnly>
+      <template #fallback>
+        <ServiceCardSkeleton />
+      </template>
 
-    <template v-else>
-      <template v-if="filteredServices.length > 0">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-4">
+      <ServiceCardSkeleton v-if="loading" />
+
+      <template v-else>
+        <div
+          v-if="filteredServices.length > 0"
+          class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-4"
+        >
           <ServiceCard
             v-for="service in filteredServices"
             :key="service.id"
@@ -203,12 +206,13 @@ const deleteService = async (service: Record<string, any>) => {
             @delete="deleteService"
           />
         </div>
-      </template>
-      <template v-else>
-        <div class="rounded-lg border border-default/20 bg-default/5 p-6 text-sm text-default/70">
+        <div
+          v-else
+          class="rounded-lg border border-default/20 bg-default/5 p-6 text-sm text-default/70"
+        >
           No services match the current filters.
         </div>
       </template>
-    </template>
+    </ClientOnly>
   </UContainer>
 </template>
