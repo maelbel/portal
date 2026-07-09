@@ -2,10 +2,6 @@
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt'],
 
-  devtools: {
-    enabled: true
-  },
-
   css: ['~/assets/css/main.css'],
 
   routeRules: {
@@ -31,7 +27,6 @@ export default defineNuxtConfig({
     server: {
       allowedHosts: [
         "portail.maelbelliard.fr",
-        "dev.portail.maelbelliard.fr"
       ]
     }
   }

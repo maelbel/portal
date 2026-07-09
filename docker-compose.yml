@@ -11,7 +11,7 @@ services:
     environment:
       NODE_ENV: development
       NODE_OPTIONS: "--max-old-space-size=512"
-      DATABASE_URL: postgresql://portail:portail@postgres:5432/portail?schema=public
+      DATABASE_URL: ${DATABASE_URL}
     ports:
       - "3000:3000"
     volumes:
@@ -26,9 +26,9 @@ services:
     container_name: 'portail-postgres'
     restart: unless-stopped
     environment:
-      POSTGRES_DB: portail
-      POSTGRES_USER: portail
-      POSTGRES_PASSWORD: portail
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
