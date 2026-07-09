@@ -41,7 +41,11 @@ export const useServicesStore = defineStore('services', () => {
   const total = computed(() => services.value.length)
 
   const upCount = computed(
-    () => services.value.filter(s => UP_STATES.has(String(s.state ?? '').toLowerCase())).length
+    () => services.value.filter(service => UP_STATES.has(String(service.state ?? '').toLowerCase())).length
+  )
+
+  const servicesNotUp = computed(
+    () => services.value.filter(service => !UP_STATES.has(String(service.state ?? '').toLowerCase()))
   )
 
   const normalizeContainerName = (name: string | null | undefined) =>
@@ -123,6 +127,7 @@ export const useServicesStore = defineStore('services', () => {
     loading,
     total,
     upCount,
+    servicesNotUp,
     findContainer,
     refreshServiceStates,
     refreshServices: refreshRawServices,

@@ -16,7 +16,7 @@ const {
   updateService
 } = useServiceModal()
 
-const { services, loading, total, upCount } = storeToRefs(servicesStore)
+const { services, loading, total, upCount, servicesNotUp } = storeToRefs(servicesStore)
 
 const searchQuery = ref('')
 const stateFilter = ref('all')
@@ -115,6 +115,23 @@ const deleteService = async (service: Record<string, any>) => {
               class="me-1"
             />
             {{ upCount }} / {{ total }} services up
+            <UTooltip
+              v-if="upCount !== total"
+              arrow
+              :content="{ side: 'right' }"
+            >
+              <template #content>
+                <div class="p-4">
+                    <span v-for="service in servicesNotUp" :key="service.id">
+                      {{ service.label }}{{ servicesNotUp.indexOf(service) !== servicesNotUp.length - 1 ? ', ' : '' }}
+                    </span>
+                </div>
+              </template>
+              <UIcon
+                name="i-lucide-info"
+                class="ms-1"
+              />
+            </UTooltip>
           </UBadge>
         </div>
       </div>
