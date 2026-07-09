@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useServicesStore } from '~/stores/services'
 
-const { data: containers } = await useFetch('/api/containers')
 const toast = useToast()
 const servicesStore = useServicesStore()
 const {
@@ -17,16 +16,17 @@ const {
   updateService
 } = useServiceModal()
 
-const normalizeContainerName = (name: string | null | undefined) => (name ?? '').replace(/^\/+/, '').toLowerCase()
+const {
+  services,
+  containers,
+  loading,
+  total,
+  upCount
+} = storeToRefs(servicesStore)
 
-const findContainer = (name: string | null | undefined) => containers.value?.find((container: { name: string | null | undefined }) => normalizeContainerName(container.name) === normalizeContainerName(name))
-
-const enrichedServices = ref<Array<Record<string, any>>>([])
 const searchQuery = ref('')
 const stateFilter = ref('all')
 const sortBy = ref('name-asc')
-
-const { services, loading } = storeToRefs(servicesStore)
 
 const isMounted = ref(false)
 onMounted(() => {
@@ -35,9 +35,8 @@ onMounted(() => {
 
 const filteredServices = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
-  const sourceServices = enrichedServices.value.length > 0 ? enrichedServices.value : (services.value ?? [])
 
-  const filtered = sourceServices.filter((service: Record<string, any>) => {
+  const filtered = services.value.filter((service: Record<string, any>) => {
     const serviceName = String(service.name ?? '').toLowerCase()
     const serviceUrl = String(service.url ?? '').toLowerCase()
     const serviceState = String(service.state ?? 'unknown')
@@ -71,47 +70,6 @@ const filteredServices = computed(() => {
   return sorted
 })
 
-const reachable = async (url: string) => {
-  if (!url) return 'unknown'
-  try {
-    const res = await $fetch('/api/ping', { query: { url } })
-    return res.success ? 'up' : 'down'
-  } catch {
-    return 'down'
-  }
-}
-
-const computeState = (reachableState: string, container: Record<string, unknown> | undefined, containerName?: string | null, hasUrl = false) => {
-  const hasContainerName = Boolean(containerName?.trim())
-
-  if (!hasUrl && !hasContainerName) return 'unknown'
-  if (!hasUrl) return container?.state === 'running' ? 'up' : 'down'
-  if (!hasContainerName) return reachableState === 'up' ? 'up' : 'down'
-  if (reachableState === 'down' || reachableState === 'unknown') return 'down'
-  if (container && container.state !== 'running') return 'down'
-  return 'up'
-}
-
-const refreshServiceStates = async () => {
-  enrichedServices.value = await Promise.all(services.value.map(async (service: Record<string, string>) => {
-    const hasUrl = Boolean(service.url?.trim())
-    const hasContainerName = Boolean(service.containerName?.trim())
-    const reachableState = hasUrl ? await reachable(service.url) : 'unknown'
-    const container = hasContainerName ? findContainer(service.containerName) : undefined
-
-    return {
-      ...service,
-      reachable: reachableState,
-      state: computeState(reachableState, container, service.containerName, hasUrl)
-    }
-  }))
-}
-
-watch([services, containers, isMounted], () => {
-  if (!isMounted.value) return
-  void refreshServiceStates()
-}, { deep: true })
-
 const deleteService = async (service: Record<string, any>) => {
   try {
     await servicesStore.deleteService(service.id)
@@ -125,7 +83,24 @@ const deleteService = async (service: Record<string, any>) => {
 <template>
   <UContainer>
     <div class="flex items-center justify-between my-6">
-      <h1 class="text-2xl font-bold">Services</h1>
+      <div class="flex items-center justify-center gap-4">
+        <h1 class="text-2xl font-bold">
+          Services
+        </h1>
+        <div class="flex items-center gap-2">
+          <UBadge
+            :color="upCount === total && total > 0 ? 'success' : upCount === 0 ? 'error' : 'warning'"
+            variant="subtle"
+            size="lg"
+          >
+            <UIcon
+              name="i-lucide-activity"
+              class="me-1"
+            />
+            {{ upCount }} / {{ total }} services up
+          </UBadge>
+        </div>
+      </div>
       <UButton
         label="Add service"
         color="primary"
@@ -202,7 +177,7 @@ const deleteService = async (service: Record<string, any>) => {
             v-for="service in filteredServices"
             :key="service.id"
             :service="service"
-            :container="findContainer(service.containerName)"
+            :container="service.container"
             @edit="openEditModal"
             @delete="deleteService"
           />
