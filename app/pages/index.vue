@@ -24,8 +24,8 @@ const { services, loading, total, upCount, servicesNotUp } = storeToRefs(service
 
 const searchQuery = ref('')
 const stateFilter = ref('all')
-const tagFilter = ref<string[]>([])
-const urlFilter = ref<boolean>(false)
+const tagFilter = ref<string[]>(['internal'])
+const urlFilter = ref<boolean>(true)
 const sortBy = ref('name-asc')
 
 const isMounted = ref(false)
