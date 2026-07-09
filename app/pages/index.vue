@@ -3,18 +3,22 @@ import { useServicesStore } from '~/stores/services'
 
 const toast = useToast()
 const servicesStore = useServicesStore()
+
 const {
   isCreateModalOpen,
-  isEditModalOpen,
   newService,
-  editingService,
   openCreateModal,
   closeCreateModal,
+  createService,
+} = useCreateServiceModal()
+
+const {
+  isEditModalOpen,
+  editingService,
   openEditModal,
   closeEditModal,
-  createService,
   updateService
-} = useServiceModal()
+} = useEditServiceModal()
 
 const { services, loading, total, upCount, servicesNotUp } = storeToRefs(servicesStore)
 

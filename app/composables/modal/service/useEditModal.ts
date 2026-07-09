@@ -1,6 +1,6 @@
 import { useServicesStore } from '~/stores/services'
 
-export const useServiceModal = () => {
+export const useEditServiceModal = () => {
   const toast = useToast()
   const servicesStore = useServicesStore()
 
@@ -11,26 +11,14 @@ export const useServiceModal = () => {
     tags: ''
   })
 
-  const isCreateModalOpen = ref(false)
   const isEditModalOpen = ref(false)
   const editingServiceId = ref<number | null>(null)
-  const newService = ref(emptyForm())
   const editingService = ref(emptyForm())
 
   const parseTags = (value: string) => value
     .split(',')
     .map(tag => tag.trim())
     .filter(Boolean)
-
-  const openCreateModal = () => {
-    newService.value = emptyForm()
-    isCreateModalOpen.value = true
-  }
-
-  const closeCreateModal = () => {
-    isCreateModalOpen.value = false
-    newService.value = emptyForm()
-  }
 
   const openEditModal = (service: Record<string, any>) => {
     editingServiceId.value = service.id
@@ -47,27 +35,6 @@ export const useServiceModal = () => {
     isEditModalOpen.value = false
     editingServiceId.value = null
     editingService.value = emptyForm()
-  }
-
-  const createService = async () => {
-    if (!newService.value.label.trim()) {
-      toast.add({ title: 'Missing fields', description: 'Label is required.', color: 'error' })
-      return
-    }
-
-    try {
-      await servicesStore.createService({
-        label: newService.value.label.trim(),
-        url: newService.value.url.trim(),
-        containerName: newService.value.containerName.trim() || null,
-        tags: parseTags(newService.value.tags)
-      })
-
-      toast.add({ title: 'Service created', description: 'The new service has been saved.', color: 'success' })
-      closeCreateModal()
-    } catch {
-      toast.add({ title: 'Creation failed', description: 'The service could not be saved.', color: 'error' })
-    }
   }
 
   const updateService = async () => {
@@ -94,15 +61,10 @@ export const useServiceModal = () => {
   }
 
   return {
-    isCreateModalOpen,
     isEditModalOpen,
-    newService,
     editingService,
-    openCreateModal,
-    closeCreateModal,
     openEditModal,
     closeEditModal,
-    createService,
     updateService
   }
 }

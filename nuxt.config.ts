@@ -7,6 +7,10 @@ export default defineNuxtConfig({
     '@nuxt/image'
   ],
 
+  imports: {
+    dirs: ['composables/**'],
+  },
+
   css: ['~/assets/css/main.css'],
 
   routeRules: {
