@@ -16,16 +16,12 @@ const {
   updateService
 } = useServiceModal()
 
-const {
-  services,
-  containers,
-  loading,
-  total,
-  upCount
-} = storeToRefs(servicesStore)
+const { services, loading, total, upCount } = storeToRefs(servicesStore)
 
 const searchQuery = ref('')
 const stateFilter = ref('all')
+const tagFilter = ref<string[]>([])
+const urlFilter = ref<boolean>(false)
 const sortBy = ref('name-asc')
 
 const isMounted = ref(false)
@@ -33,18 +29,39 @@ onMounted(() => {
   isMounted.value = true
 })
 
+const availableTags = computed(() => {
+  const tagSet = new Set<string>()
+  for (const service of services.value) {
+    const tags = (service as Record<string, any>).tags as Array<{ label?: string }> | undefined
+    if (!tags) continue
+    for (const tag of tags) {
+      if (tag?.label) tagSet.add(tag.label)
+    }
+  }
+  return Array.from(tagSet)
+    .sort((a, b) => a.localeCompare(b))
+    .map(label => ({ label, value: label }))
+})
+
 const filteredServices = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
+  const selectedTags = tagFilter.value
 
   const filtered = services.value.filter((service: Record<string, any>) => {
     const serviceName = String(service.name ?? '').toLowerCase()
     const serviceUrl = String(service.url ?? '').toLowerCase()
     const serviceState = String(service.state ?? 'unknown')
+    const serviceTagLabels: string[] = Array.isArray(service.tags)
+      ? service.tags.map((tag: { label?: string }) => tag?.label).filter(Boolean)
+      : []
 
     const matchesQuery = !query || serviceName.includes(query) || serviceUrl.includes(query)
     const matchesState = stateFilter.value === 'all' || serviceState === stateFilter.value
+    const matchesTags = selectedTags.length === 0
+      || selectedTags.every(tag => serviceTagLabels.includes(tag))
+    const hasUrl = urlFilter.value ? service.url : true
 
-    return matchesQuery && matchesState
+    return matchesQuery && matchesState && matchesTags && hasUrl
   })
 
   const sorted = [...filtered]
@@ -118,7 +135,12 @@ const deleteService = async (service: Record<string, any>) => {
         class="md:max-w-sm"
       />
 
-      <div class="flex flex-col gap-3 sm:flex-row">
+      <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <UCheckbox
+          v-model="urlFilter"
+          label="Has URL"
+        />
+
         <USelect
           v-model="stateFilter"
           :items="[
@@ -128,6 +150,15 @@ const deleteService = async (service: Record<string, any>) => {
             { label: 'Unknown', value: 'unknown' }
           ]"
           placeholder="Filter by state"
+        />
+
+        <USelectMenu
+          v-model="tagFilter"
+          :items="availableTags"
+          value-key="value"
+          multiple
+          placeholder="Filter by tag"
+          :disabled="availableTags.length === 0"
         />
 
         <USelect
