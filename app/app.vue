@@ -12,7 +12,7 @@ useHead({
 })
 
 const title = 'Portail'
-const description = 'A portail for all docker container.'
+const description = 'A portail for all homelab services.'
 
 useSeoMeta({
   title,
@@ -28,8 +28,9 @@ useSeoMeta({
   <UApp>
     <UHeader :toggle="false">
       <template #left>
-        <NuxtLink to="/">
-          Portail
+        <NuxtLink to="/" class="flex items-center gap-4">
+          <NuxtImg src="logo.png" width="32" height="32" alt="Logo" />
+          <span class="font-semibold">Portail - Homelab</span>
 	      </NuxtLink>
       </template>
 
