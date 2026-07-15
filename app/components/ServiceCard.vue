@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{
   service: Record<string, any>
-  container?: Record<string, any>
   onEdit?: (service: Record<string, any>) => void
   onDelete?: (service: Record<string, any>) => void
 }>()
@@ -34,7 +33,6 @@ const handleDelete = () => {
             <span class="font-semibold">{{ service.label }}</span>
           </ULink>
           <div class="flex items-center gap-1" @click.stop.prevent>
-            <Ping :state="service.state" />
             <ServiceActions :service="service" @edit="handleEdit" @delete="handleDelete" />
           </div>
         </div>
@@ -56,11 +54,9 @@ const handleDelete = () => {
       >
         <div v-if="service.url" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
           <p class="text-sm truncate">{{ service.url }}</p>
-          <p class="text-xs ms-4">{{ service.reachable }}</p>
         </div>
         <div v-if="service.containerName" class="grid grid-cols-[1fr_auto] justify-between items-center text-muted">
           <p class="text-sm truncate">{{ service.containerName }}</p>
-          <p class="text-xs ms-4">{{ container?.status || 'unknown' }}</p>
         </div>
       </ULink>
     </UCard>

@@ -20,7 +20,7 @@ const {
   updateService
 } = useEditServiceModal()
 
-const { services, loading, total, upCount, servicesNotUp } = storeToRefs(servicesStore)
+const { services, loading } = storeToRefs(servicesStore)
 
 const searchQuery = ref('')
 const stateFilter = ref('all')
@@ -54,34 +54,26 @@ const filteredServices = computed(() => {
   const filtered = services.value.filter((service: Record<string, any>) => {
     const serviceName = String(service.name ?? '').toLowerCase()
     const serviceUrl = String(service.url ?? '').toLowerCase()
-    const serviceState = String(service.state ?? 'unknown')
-    const serviceTagLabels: string[] = Array.isArray(service.tags)
+    const serviceTagLabels: (string|undefined)[] = Array.isArray(service.tags)
       ? service.tags.map((tag: { label?: string }) => tag?.label).filter(Boolean)
       : []
 
     const matchesQuery = !query || serviceName.includes(query) || serviceUrl.includes(query)
-    const matchesState = stateFilter.value === 'all' || serviceState === stateFilter.value
     const matchesTags = selectedTags.length === 0
       || selectedTags.every(tag => serviceTagLabels.includes(tag))
     const hasUrl = urlFilter.value ? service.url : true
 
-    return matchesQuery && matchesState && matchesTags && hasUrl
+    return matchesQuery && matchesTags && hasUrl
   })
 
   const sorted = [...filtered]
   sorted.sort((a: Record<string, any>, b: Record<string, any>) => {
     const nameA = String(a.label ?? '').toLowerCase()
     const nameB = String(b.label ?? '').toLowerCase()
-    const stateA = String(a.state ?? 'unknown')
-    const stateB = String(b.state ?? 'unknown')
 
     switch (sortBy.value) {
       case 'name-desc':
         return nameB.localeCompare(nameA)
-      case 'state-up':
-        return stateA.localeCompare(stateB)
-      case 'state-down':
-        return stateB.localeCompare(stateA)
       case 'name-asc':
       default:
         return nameA.localeCompare(nameB)
@@ -108,36 +100,6 @@ const deleteService = async (service: Record<string, any>) => {
         <h1 class="text-2xl font-bold">
           Services
         </h1>
-        <div class="flex items-center gap-2">
-          <UBadge
-            :color="upCount === total && total > 0 ? 'success' : upCount === 0 ? 'error' : 'warning'"
-            variant="subtle"
-            size="lg"
-          >
-            <UIcon
-              name="i-lucide-activity"
-              class="me-1"
-            />
-            {{ upCount }} / {{ total }} services up
-            <UTooltip
-              v-if="upCount !== total"
-              arrow
-              :content="{ side: 'right' }"
-            >
-              <template #content>
-                <div class="p-4">
-                    <span v-for="service in servicesNotUp" :key="service.id">
-                      {{ service.label }}{{ servicesNotUp.indexOf(service) !== servicesNotUp.length - 1 ? ', ' : '' }}
-                    </span>
-                </div>
-              </template>
-              <UIcon
-                name="i-lucide-info"
-                class="ms-1"
-              />
-            </UTooltip>
-          </UBadge>
-        </div>
       </div>
       <UButton
         label="Add service"
@@ -160,17 +122,6 @@ const deleteService = async (service: Record<string, any>) => {
         <UCheckbox
           v-model="urlFilter"
           label="Has URL"
-        />
-
-        <USelect
-          v-model="stateFilter"
-          :items="[
-            { label: 'All states', value: 'all' },
-            { label: 'Up', value: 'up' },
-            { label: 'Down', value: 'down' },
-            { label: 'Unknown', value: 'unknown' }
-          ]"
-          placeholder="Filter by state"
         />
 
         <USelectMenu
@@ -229,7 +180,6 @@ const deleteService = async (service: Record<string, any>) => {
             v-for="service in filteredServices"
             :key="service.id"
             :service="service"
-            :container="service.container"
             @edit="openEditModal"
             @delete="deleteService"
           />
