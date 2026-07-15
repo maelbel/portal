@@ -20,6 +20,14 @@ services:
     tty: true
     networks:
       - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.portail.loadbalancer.server.port=3000
+      - traefik.http.routers.portail.rule=Host(`portail.maelbelliard.fr`)
+      - traefik.http.routers.portail.service=portail
+      - traefik.http.routers.portail.entrypoints=websecure
+      - traefik.http.routers.portail.tls=true
+      - traefik.http.routers.portail.tls.certresolver=ovh
 
   postgres:
     image: postgres:16-alpine
