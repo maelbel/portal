@@ -22,11 +22,19 @@ useSeoMeta({
   ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterCard: 'summary_large_image'
 })
+
+const {
+  isCreateModalOpen,
+  newService,
+  openCreateModal,
+  closeCreateModal,
+  createService,
+} = useCreateServiceModal()
 </script>
 
 <template>
   <UApp>
-    <UHeader :toggle="false">
+    <UHeader :toggle="false" :ui="{ right: 'gap-3'}">
       <template #left>
         <NuxtLink to="/" class="flex items-center gap-4">
           <NuxtImg src="logo.png" width="32" height="32" alt="Logo" />
@@ -45,6 +53,13 @@ useSeoMeta({
           color="neutral"
           variant="ghost"
         />
+
+        <UButton
+          icon="i-lucide-plus"
+          aria-label="Add service"
+          color="primary"
+          @click="openCreateModal"
+        />
       </template>
     </UHeader>
 
@@ -53,5 +68,14 @@ useSeoMeta({
     </UMain>
 
     <UFooter />
+
+    <ServiceForm
+      v-if="isCreateModalOpen"
+      v-model="newService"
+      title="Add a service"
+      submit-label="Create"
+      @submit="createService"
+      @cancel="closeCreateModal"
+    />
   </UApp>
 </template>

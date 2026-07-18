@@ -5,14 +5,6 @@ const toast = useToast()
 const servicesStore = useServicesStore()
 
 const {
-  isCreateModalOpen,
-  newService,
-  openCreateModal,
-  closeCreateModal,
-  createService,
-} = useCreateServiceModal()
-
-const {
   isEditModalOpen,
   editingService,
   openEditModal,
@@ -23,7 +15,6 @@ const {
 const { services, loading } = storeToRefs(servicesStore)
 
 const searchQuery = ref('')
-const stateFilter = ref('all')
 const tagFilter = ref<string[]>(['internal'])
 const urlFilter = ref<boolean>(true)
 const sortBy = ref('name-asc')
@@ -95,21 +86,6 @@ const deleteService = async (service: Record<string, any>) => {
 
 <template>
   <UContainer>
-    <div class="flex items-center justify-between my-6">
-      <div class="flex items-center justify-center gap-4">
-        <h1 class="text-2xl font-bold">
-          Services
-        </h1>
-      </div>
-      <UButton
-        label="Add service"
-        color="primary"
-        @click="openCreateModal"
-      />
-    </div>
-
-    <USeparator />
-
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between my-4">
       <UInput
         v-model="searchQuery"
@@ -147,15 +123,6 @@ const deleteService = async (service: Record<string, any>) => {
     </div>
 
     <ServiceForm
-      v-if="isCreateModalOpen"
-      v-model="newService"
-      title="Add a service"
-      submit-label="Create"
-      @submit="createService"
-      @cancel="closeCreateModal"
-    />
-
-    <ServiceForm
       v-if="isEditModalOpen"
       v-model="editingService"
       title="Edit service"
@@ -174,7 +141,7 @@ const deleteService = async (service: Record<string, any>) => {
       <template v-else>
         <div
           v-if="filteredServices.length > 0"
-          class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mt-4"
+          class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mt-4"
         >
           <ServiceCard
             v-for="service in filteredServices"
