@@ -17,7 +17,6 @@ const { services, loading } = storeToRefs(servicesStore)
 const searchQuery = ref('')
 const tagFilter = ref<string[]>(['internal'])
 const urlFilter = ref<boolean>(true)
-const sortBy = ref('name-asc')
 
 const isMounted = ref(false)
 onMounted(() => {
@@ -62,13 +61,7 @@ const filteredServices = computed(() => {
     const nameA = String(a.label ?? '').toLowerCase()
     const nameB = String(b.label ?? '').toLowerCase()
 
-    switch (sortBy.value) {
-      case 'name-desc':
-        return nameB.localeCompare(nameA)
-      case 'name-asc':
-      default:
-        return nameA.localeCompare(nameB)
-    }
+    return nameA.localeCompare(nameB)
   })
 
   return sorted
@@ -107,17 +100,6 @@ const deleteService = async (service: Record<string, any>) => {
           multiple
           placeholder="Filter by tag"
           :disabled="availableTags.length === 0"
-        />
-
-        <USelect
-          v-model="sortBy"
-          :items="[
-            { label: 'Sort by name A-Z', value: 'name-asc' },
-            { label: 'Sort by name Z-A', value: 'name-desc' },
-            { label: 'Sort by state ↑', value: 'state-up' },
-            { label: 'Sort by state ↓', value: 'state-down' }
-          ]"
-          placeholder="Sort"
         />
       </div>
     </div>
