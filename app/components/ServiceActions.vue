@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui'
+
 const props = defineProps<{
   service: Record<string, any>
 }>()
@@ -8,7 +10,7 @@ const emit = defineEmits<{
   delete: [service: Record<string, any>]
 }>()
 
-const items = [
+const items: DropdownMenuItem[] = [
   {
     label: 'Edit',
     icon: 'i-lucide-pencil',

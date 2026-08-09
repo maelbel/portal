@@ -1,25 +1,34 @@
-import type { Service } from '~/generated/prisma/client'
+import type { Service, Tag } from '~/generated/prisma/client'
+
+export type ServiceWithTags = Service & { tags: Tag[] }
+
+export interface ServicePayload {
+  label?: string
+  url?: string
+  containerName?: string | null
+  tags?: string[]
+}
 
 export const useServicesStore = defineStore('services', () => {
   const {
     data: services,
     pending: servicesPending,
     refresh: refreshRawServices
-  } = useAsyncData<Service[]>('services', () => $fetch<Service[]>('/api/services'), {
+  } = useAsyncData<ServiceWithTags[]>('services', () => $fetch<ServiceWithTags[]>('/api/services'), {
     default: () => []
   })
 
   const loading = computed(() => servicesPending.value)
   const total = computed(() => services.value.length)
 
-  const createService = async (payload: Partial<Service>) => {
-    const created = await $fetch<Service>('/api/services', { method: 'POST', body: payload })
+  const createService = async (payload: ServicePayload) => {
+    const created = await $fetch<ServiceWithTags>('/api/services', { method: 'POST', body: payload })
     services.value = [created, ...(services.value ?? [])]
     return created
   }
 
-  const updateService = async (id: number, payload: Partial<Service>) => {
-    const updated = await $fetch<Service>(`/api/services/${id}`, { method: 'PUT', body: payload })
+  const updateService = async (id: number, payload: ServicePayload) => {
+    const updated = await $fetch<ServiceWithTags>(`/api/services/${id}`, { method: 'PUT', body: payload })
     services.value = (services.value ?? []).map(s => (s.id === id ? updated : s))
     return updated
   }
