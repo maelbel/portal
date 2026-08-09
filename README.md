@@ -1,64 +1,53 @@
-# Nuxt Starter Template
+# Portail
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+Portail personnel listant les services auto-hébergés (homelab) : recherche, filtre par tags, et gestion (créer / éditer / supprimer) des services et de leurs tags.
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+## Stack
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+- [Nuxt 4](https://nuxt.com) + [Nuxt UI](https://ui.nuxt.com) + Tailwind CSS
+- Pinia pour l'état du store `services`
+- Prisma 7 (adapter `pg`) + PostgreSQL
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+## Modèle de données
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
-
-## Quick Start
-
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
-
-## Deploy your own
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+- `Service` : `label`, `url`, `containerName`, tags associés
+- `Tag` : `label` (unique), services associés (relation many-to-many)
 
 ## Setup
 
-Make sure to install the dependencies:
+Installer les dépendances :
 
 ```bash
 pnpm install
 ```
 
-## Development Server
+Copier `.env.example` en `.env` et renseigner `DATABASE_URL`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`.
 
-Start the development server on `http://localhost:3000`:
+## Développement
 
 ```bash
 pnpm dev
 ```
 
-## Production
-
-Build the application for production:
+Ou via Docker Compose (démarre aussi Postgres) :
 
 ```bash
-pnpm build
+docker compose up
 ```
 
-Locally preview production build:
+L'app est servie sur `http://localhost:3000`.
 
-```bash
-pnpm preview
-```
+## Scripts
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- `pnpm lint` — ESLint
+- `pnpm typecheck` — vérification des types Nuxt/Vue
+- `pnpm build` / `pnpm preview` — build et prévisualisation de production
 
-## Renovate integration
+## API
 
-Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.
+- `GET/POST /api/services`, `GET/PUT/DELETE /api/services/:id`
+- `GET/POST /api/tags`, `PUT/DELETE /api/tags/:id`
+
+## Déploiement
+
+Le portail n'est pas exposé publiquement — il tourne derrière Traefik sur le réseau interne (`portail.maelbelliard.fr`), accessible uniquement depuis le réseau local/VPN de l'auteur. Le `docker-compose.yml` construit l'image en cible `development` avec le code monté en volume.
