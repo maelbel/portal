@@ -1,8 +1,7 @@
 import { prisma } from '../../utils/prisma'
+import type { Prisma } from '../../../app/generated/prisma/client'
 
-const db = prisma as any
-
-async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }) {
+async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }): Promise<{ id: number }[]> {
   const tagIds = Array.isArray(input.tagIds)
     ? input.tagIds.filter((value): value is number => typeof value === 'number')
     : []
@@ -20,10 +19,10 @@ async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }
     : []
 
   const existingTags = tagIds.length
-    ? await db.tag.findMany({ where: { id: { in: tagIds } }, select: { id: true } })
+    ? await prisma.tag.findMany({ where: { id: { in: tagIds } }, select: { id: true } })
     : []
 
-  const existingTagIds = new Set(existingTags.map((tag: { id: number }) => tag.id))
+  const existingTagIds = new Set(existingTags.map((tag) => tag.id))
   const resolvedIds = tagIds.filter((id) => existingTagIds.has(id))
 
   if (!tagLabels.length) {
@@ -32,9 +31,9 @@ async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }
 
   const createdOrConnectedTags = await Promise.all(
     tagLabels.map(async (label) => {
-      const existingTag = await db.tag.findUnique({ where: { label } })
+      const existingTag = await prisma.tag.findUnique({ where: { label } })
       if (existingTag) return { id: existingTag.id }
-      const createdTag = await db.tag.create({ data: { label } })
+      const createdTag = await prisma.tag.create({ data: { label } })
       return { id: createdTag.id }
     })
   )
@@ -51,7 +50,7 @@ export default defineEventHandler(async (event) => {
   const method = event.node.req.method?.toUpperCase()
 
   if (method === 'GET') {
-    const service = await db.service.findUnique({
+    const service = await prisma.service.findUnique({
       where: { id },
       include: { tags: true }
     })
@@ -69,7 +68,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'No body provided' })
     }
 
-    const data: Record<string, unknown> = {}
+    const data: Prisma.ServiceUpdateInput = {}
 
     if (typeof body.label === 'string') data.label = body.label
     if (typeof body.url === 'string') data.url = body.url
@@ -77,13 +76,13 @@ export default defineEventHandler(async (event) => {
       data.containerName = body.containerName
     }
 
-    const service = await db.service.update({
+    await prisma.service.update({
       where: { id },
       data
     })
 
     if (body.tagIds !== undefined || body.tags !== undefined) {
-      await db.service.update({
+      await prisma.service.update({
         where: { id },
         data: {
           tags: { set: [] }
@@ -96,7 +95,7 @@ export default defineEventHandler(async (event) => {
       })
 
       if (tagConnections.length) {
-        await db.service.update({
+        await prisma.service.update({
           where: { id },
           data: {
             tags: { connect: tagConnections }
@@ -105,14 +104,14 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    return await db.service.findUnique({
+    return await prisma.service.findUnique({
       where: { id },
       include: { tags: true }
     })
   }
 
   if (method === 'DELETE') {
-    await db.service.delete({ where: { id } })
+    await prisma.service.delete({ where: { id } })
     return { success: true }
   }
 

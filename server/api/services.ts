@@ -1,8 +1,7 @@
 import { prisma } from '../utils/prisma'
+import type { Prisma } from '../../app/generated/prisma/client'
 
-const db = prisma as any
-
-async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }) {
+async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }): Promise<{ id: number }[]> {
   const tagIds = Array.isArray(input.tagIds)
     ? input.tagIds.filter((value): value is number => typeof value === 'number')
     : []
@@ -20,10 +19,10 @@ async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }
     : []
 
   const existingTags = tagIds.length
-    ? await db.tag.findMany({ where: { id: { in: tagIds } }, select: { id: true } })
+    ? await prisma.tag.findMany({ where: { id: { in: tagIds } }, select: { id: true } })
     : []
 
-  const existingTagIds = new Set(existingTags.map((tag: { id: number }) => tag.id))
+  const existingTagIds = new Set(existingTags.map((tag) => tag.id))
   const resolvedIds = tagIds.filter((id) => existingTagIds.has(id))
 
   if (!tagLabels.length) {
@@ -32,9 +31,9 @@ async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }
 
   const createdOrConnectedTags = await Promise.all(
     tagLabels.map(async (label) => {
-      const existingTag = await db.tag.findUnique({ where: { label } })
+      const existingTag = await prisma.tag.findUnique({ where: { label } })
       if (existingTag) return { id: existingTag.id }
-      const createdTag = await db.tag.create({ data: { label } })
+      const createdTag = await prisma.tag.create({ data: { label } })
       return { id: createdTag.id }
     })
   )
@@ -46,7 +45,7 @@ export default defineEventHandler(async (event) => {
   const method = event.node.req.method?.toUpperCase()
 
   if (method === 'GET') {
-    return await db.service.findMany({
+    return await prisma.service.findMany({
       include: { tags: true },
       orderBy: { createdAt: 'desc' }
     })
@@ -59,24 +58,20 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'label and url are required' })
     }
 
-    const data = {
-      label: body.label,
-      url: body.url,
-      containerName: typeof body.containerName === 'string' ? body.containerName : null
-    }
-
     const tagConnections = await resolveTagConnections({
       tagIds: body.tagIds,
       tags: body.tags
     })
 
-    return await db.service.create({
-      data: {
-        ...data,
-        tags: {
-          connect: tagConnections
-        }
-      },
+    const data: Prisma.ServiceCreateInput = {
+      label: body.label,
+      url: body.url,
+      containerName: typeof body.containerName === 'string' ? body.containerName : null,
+      tags: { connect: tagConnections }
+    }
+
+    return await prisma.service.create({
+      data,
       include: { tags: true }
     })
   }

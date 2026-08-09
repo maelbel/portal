@@ -1,7 +1,5 @@
 import { prisma } from '../../utils/prisma'
 
-const db = prisma as any
-
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
   if (!Number.isInteger(id)) {
@@ -16,21 +14,21 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'label is required' })
     }
 
-    return await db.tag.update({
+    return await prisma.tag.update({
       where: { id },
       data: { label: body.label.trim() }
     })
   }
 
   if (method === 'DELETE') {
-    await db.tag.update({
+    await prisma.tag.update({
       where: { id },
       data: {
-        links: { set: [] }
+        services: { set: [] }
       }
     })
 
-    await db.tag.delete({ where: { id } })
+    await prisma.tag.delete({ where: { id } })
     return { success: true }
   }
 

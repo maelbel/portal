@@ -1,12 +1,10 @@
 import { prisma } from '../utils/prisma'
 
-const db = prisma as any
-
 export default defineEventHandler(async (event) => {
   const method = event.node.req.method?.toUpperCase()
 
   if (method === 'GET') {
-    return await db.tag.findMany({
+    return await prisma.tag.findMany({
       orderBy: { createdAt: 'desc' }
     })
   }
@@ -17,7 +15,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'label is required' })
     }
 
-    return await db.tag.create({
+    return await prisma.tag.create({
       data: { label: body.label.trim() }
     })
   }
