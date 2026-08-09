@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ServiceWithTags } from '~/stores/services'
 import { useServicesStore } from '~/stores/services'
 
 const toast = useToast()
@@ -26,10 +27,8 @@ onMounted(() => {
 const availableTags = computed(() => {
   const tagSet = new Set<string>()
   for (const service of services.value) {
-    const tags = (service as Record<string, any>).tags as Array<{ label?: string }> | undefined
-    if (!tags) continue
-    for (const tag of tags) {
-      if (tag?.label) tagSet.add(tag.label)
+    for (const tag of service.tags) {
+      tagSet.add(tag.label)
     }
   }
   return Array.from(tagSet)
@@ -41,12 +40,10 @@ const filteredServices = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   const selectedTags = tagFilter.value
 
-  const filtered = services.value.filter((service: Record<string, any>) => {
-    const serviceName = String(service.name ?? '').toLowerCase()
-    const serviceUrl = String(service.url ?? '').toLowerCase()
-    const serviceTagLabels: (string|undefined)[] = Array.isArray(service.tags)
-      ? service.tags.map((tag: { label?: string }) => tag?.label).filter(Boolean)
-      : []
+  const filtered = services.value.filter((service) => {
+    const serviceName = service.label.toLowerCase()
+    const serviceUrl = (service.url ?? '').toLowerCase()
+    const serviceTagLabels = service.tags.map(tag => tag.label)
 
     const matchesQuery = !query || serviceName.includes(query) || serviceUrl.includes(query)
     const matchesTags = selectedTags.length === 0
@@ -57,17 +54,12 @@ const filteredServices = computed(() => {
   })
 
   const sorted = [...filtered]
-  sorted.sort((a: Record<string, any>, b: Record<string, any>) => {
-    const nameA = String(a.label ?? '').toLowerCase()
-    const nameB = String(b.label ?? '').toLowerCase()
-
-    return nameA.localeCompare(nameB)
-  })
+  sorted.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
 
   return sorted
 })
 
-const deleteService = async (service: Record<string, any>) => {
+const deleteService = async (service: ServiceWithTags) => {
   try {
     await servicesStore.deleteService(service.id)
     toast.add({ title: 'Service deleted', description: 'The service has been removed.', color: 'success' })

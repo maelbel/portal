@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   ],
 
   imports: {
-    dirs: ['composables/**'],
+    dirs: ['composables/**']
   },
 
   css: ['~/assets/css/main.css'],
@@ -17,7 +17,19 @@ export default defineNuxtConfig({
     '/': { prerender: true }
   },
 
+  devServer: {
+    host: '0.0.0.0'
+  },
+
   compatibilityDate: '2026-06-30',
+
+  vite: {
+    server: {
+      allowedHosts: [
+        'portail.maelbelliard.fr'
+      ]
+    }
+  },
 
   eslint: {
     config: {
@@ -25,18 +37,6 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
-    }
-  },
-
-  devServer: {
-    host: "0.0.0.0"
-  },
-
-  vite: {
-    server: {
-      allowedHosts: [
-        "portail.maelbelliard.fr",
-      ]
     }
   }
 })

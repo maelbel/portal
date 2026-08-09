@@ -28,18 +28,29 @@ const {
   newService,
   openCreateModal,
   closeCreateModal,
-  createService,
+  createService
 } = useCreateServiceModal()
 </script>
 
 <template>
   <UApp>
-    <UHeader :toggle="false" :ui="{ right: 'gap-3'}">
+    <UHeader
+      :toggle="false"
+      :ui="{ right: 'gap-3' }"
+    >
       <template #left>
-        <NuxtLink to="/" class="flex items-center gap-4">
-          <NuxtImg src="logo.png" width="32" height="32" alt="Logo" />
+        <NuxtLink
+          to="/"
+          class="flex items-center gap-4"
+        >
+          <NuxtImg
+            src="logo.png"
+            width="32"
+            height="32"
+            alt="Logo"
+          />
           <span class="font-semibold">Portail - Homelab</span>
-	      </NuxtLink>
+        </NuxtLink>
       </template>
 
       <template #right>

@@ -1,3 +1,4 @@
+import type { ServiceWithTags } from '~/stores/services'
 import { useServicesStore } from '~/stores/services'
 
 export const useEditServiceModal = () => {
@@ -20,13 +21,13 @@ export const useEditServiceModal = () => {
     .map(tag => tag.trim())
     .filter(Boolean)
 
-  const openEditModal = (service: Record<string, any>) => {
+  const openEditModal = (service: ServiceWithTags) => {
     editingServiceId.value = service.id
     editingService.value = {
       label: service.label,
-      url: service.url,
+      url: service.url ?? '',
       containerName: service.containerName || '',
-      tags: service.tags?.map((tag: Record<string, any>) => tag.label).join(', ') || ''
+      tags: service.tags.map(tag => tag.label).join(', ')
     }
     isEditModalOpen.value = true
   }

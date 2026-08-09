@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
+import type { ServiceWithTags } from '~/stores/services'
 
 const props = defineProps<{
-  service: Record<string, any>
+  service: ServiceWithTags
 }>()
 
 const emit = defineEmits<{
-  edit: [service: Record<string, any>]
-  delete: [service: Record<string, any>]
+  edit: [service: ServiceWithTags]
+  delete: [service: ServiceWithTags]
 }>()
 
 const items: DropdownMenuItem[] = [

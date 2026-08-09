@@ -1,5 +1,12 @@
 import { useServicesStore } from '~/stores/services'
 
+export interface ServiceFormValue {
+  label: string
+  url: string
+  containerName: string
+  tags: string
+}
+
 export const useCreateServiceModal = () => {
   const toast = useToast()
   const servicesStore = useServicesStore()
@@ -55,6 +62,6 @@ export const useCreateServiceModal = () => {
     newService,
     openCreateModal,
     closeCreateModal,
-    createService,
+    createService
   }
 }

@@ -6,13 +6,13 @@ export default defineAppConfig({
     },
     button: {
       slots: {
-        base: ['cursor-pointer'],
+        base: ['cursor-pointer']
       }
     },
     dropdownMenu: {
       slots: {
-        item: 'cursor-pointer',
-      },
-    },
+        item: 'cursor-pointer'
+      }
+    }
   }
 })

@@ -1,6 +1,6 @@
 import { prisma } from './prisma'
 
-export async function resolveTagConnections(input: { tagIds?: unknown; tags?: unknown }): Promise<{ id: number }[]> {
+export async function resolveTagConnections(input: { tagIds?: unknown, tags?: unknown }): Promise<{ id: number }[]> {
   const tagIds = Array.isArray(input.tagIds)
     ? input.tagIds.filter((value): value is number => typeof value === 'number')
     : []
@@ -21,11 +21,11 @@ export async function resolveTagConnections(input: { tagIds?: unknown; tags?: un
     ? await prisma.tag.findMany({ where: { id: { in: tagIds } }, select: { id: true } })
     : []
 
-  const existingTagIds = new Set(existingTags.map((tag) => tag.id))
-  const resolvedIds = tagIds.filter((id) => existingTagIds.has(id))
+  const existingTagIds = new Set(existingTags.map(tag => tag.id))
+  const resolvedIds = tagIds.filter(id => existingTagIds.has(id))
 
   if (!tagLabels.length) {
-    return resolvedIds.map((id) => ({ id }))
+    return resolvedIds.map(id => ({ id }))
   }
 
   const createdOrConnectedTags = await Promise.all(
@@ -37,5 +37,5 @@ export async function resolveTagConnections(input: { tagIds?: unknown; tags?: un
     })
   )
 
-  return [...resolvedIds.map((id) => ({ id })), ...createdOrConnectedTags]
+  return [...resolvedIds.map(id => ({ id })), ...createdOrConnectedTags]
 }
