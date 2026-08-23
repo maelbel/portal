@@ -36,7 +36,6 @@ const servicesMatchingSearch = computed(() => {
     const matchesQuery = !query
       || service.label.toLowerCase().includes(query)
       || (service.url ?? '').toLowerCase().includes(query)
-      || (service.containers ?? []).some(container => container.toLowerCase().includes(query))
     const hasUrl = urlFilter.value ? service.url : true
 
     return matchesQuery && hasUrl
