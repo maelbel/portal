@@ -1,5 +1,5 @@
 {
-  "name": "portail",
+  "name": "portal",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,21 +15,12 @@
     "@iconify-json/simple-icons": "^1.2.87",
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "^4.9.0",
-    "@pinia/nuxt": "0.11.3",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
     "nuxt": "^4.4.8",
-    "pg": "^8.22.0",
-    "pinia": "^3.0.4",
     "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.16.0",
-    "@types/pg": "^8.20.0",
-    "dotenv": "^17.4.2",
     "eslint": "^10.6.0",
-    "prisma": "^7.8.0",
-    "tsx": "^4.23.0",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.5"
   },

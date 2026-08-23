@@ -1,58 +1,31 @@
 <script setup lang="ts">
-import type { ServiceWithTags } from '~/stores/services'
+import type { ServiceConfig } from '~/services.config'
 
-const props = defineProps<{
-  service: ServiceWithTags
-  onEdit?: (service: ServiceWithTags) => void
-  onDelete?: (service: ServiceWithTags) => void
+defineProps<{
+  service: ServiceConfig
 }>()
-
-const emit = defineEmits<{
-  edit: [service: ServiceWithTags]
-  delete: [service: ServiceWithTags]
-}>()
-
-const handleEdit = () => {
-  emit('edit', props.service)
-}
-
-const handleDelete = () => {
-  emit('delete', props.service)
-}
 </script>
 
 <template>
   <div class="h-full">
     <UCard :ui="{ root: 'h-full' }">
       <template #header>
-        <div class="flex justify-between items-center gap-2">
-          <ULink
-            :to="service.url ?? undefined"
-            :external="Boolean(service.url?.startsWith('http'))"
-            :target="'_blank'"
-            class="text-left flex-1 min-w-0"
-          >
-            <span class="font-semibold">{{ service.label }}</span>
-          </ULink>
-          <div
-            class="flex items-center gap-1"
-            @click.stop.prevent
-          >
-            <ServiceActions
-              :service="service"
-              @edit="handleEdit"
-              @delete="handleDelete"
-            />
-          </div>
-        </div>
+        <ULink
+          :to="service.url ?? undefined"
+          :external="Boolean(service.url?.startsWith('http'))"
+          :target="'_blank'"
+          class="text-left flex-1 min-w-0"
+        >
+          <span class="font-semibold">{{ service.label }}</span>
+        </ULink>
         <div
           v-if="service.tags?.length"
           class="mt-1 flex gap-1"
         >
           <UBadge
             v-for="tag in service.tags"
-            :key="tag.label"
-            :label="tag.label"
+            :key="tag"
+            :label="tag"
             variant="outline"
             color="primary"
           />

@@ -1,17 +1,13 @@
 services:
-  portail:
-    container_name: 'portail'
+  portal:
+    container_name: 'portal'
     build:
       context: .
       target: development
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       NODE_ENV: development
       NODE_OPTIONS: "--max-old-space-size=512"
-      DATABASE_URL: ${DATABASE_URL}
     ports:
       - "3000:3000"
     volumes:
@@ -21,33 +17,12 @@ services:
       - proxy
     labels:
       - traefik.enable=true
-      - traefik.http.services.portail.loadbalancer.server.port=3000
-      - traefik.http.routers.portail.rule=Host(`portail.maelbelliard.fr`)
-      - traefik.http.routers.portail.service=portail
-      - traefik.http.routers.portail.entrypoints=websecure
-      - traefik.http.routers.portail.tls=true
-      - traefik.http.routers.portail.tls.certresolver=ovh
-
-  postgres:
-    image: postgres:16-alpine
-    container_name: 'portail-postgres'
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U portail -d portail"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - proxy
-
-volumes:
-  postgres_data:
+      - traefik.http.services.portal.loadbalancer.server.port=3000
+      - traefik.http.routers.portal.rule=Host(`portal.maelbelliard.fr`)
+      - traefik.http.routers.portal.service=portal
+      - traefik.http.routers.portal.entrypoints=websecure
+      - traefik.http.routers.portal.tls=true
+      - traefik.http.routers.portal.tls.certresolver=ovh
 
 networks:
   proxy:

@@ -1,12 +1,10 @@
 allowBuilds:
   '@parcel/watcher': false
-  '@prisma/engines': set this to true or false
   '@tailwindcss/oxide': false
   cpu-features: false
   esbuild: false
-  prisma: set this to true or false
   protobufjs: false
-  sharp: set this to true or false
+  sharp: true
   ssh2: false
   unrs-resolver: false
   vue-demi: false

@@ -3,7 +3,6 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    '@pinia/nuxt',
     '@nuxt/image'
   ],
 
@@ -26,7 +25,7 @@ export default defineNuxtConfig({
   vite: {
     server: {
       allowedHosts: [
-        'portail.maelbelliard.fr'
+        'portal.maelbelliard.fr'
       ]
     }
   },
