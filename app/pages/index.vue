@@ -1,9 +1,23 @@
 <script setup lang="ts">
 import { services } from '~/services.config'
 
+const DEFAULT_TAG = 'all'
+
 const searchQuery = ref('')
-const tagFilter = ref<string[]>(['internal'])
+const activeTag = ref(DEFAULT_TAG)
 const urlFilter = ref<boolean>(true)
+
+const hasCustomFilters = computed(() =>
+  searchQuery.value.trim() !== ''
+  || urlFilter.value !== true
+  || activeTag.value !== DEFAULT_TAG
+)
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  activeTag.value = DEFAULT_TAG
+  urlFilter.value = true
+}
 
 const availableTags = computed(() => {
   const tagSet = new Set<string>()
@@ -12,64 +26,98 @@ const availableTags = computed(() => {
       tagSet.add(tag)
     }
   }
-  return Array.from(tagSet)
-    .sort((a, b) => a.localeCompare(b))
-    .map(label => ({ label, value: label }))
+  return Array.from(tagSet).sort((a, b) => a.localeCompare(b))
 })
 
-const filteredServices = computed(() => {
+const servicesMatchingSearch = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
-  const selectedTags = tagFilter.value
 
-  const filtered = services.filter((service) => {
-    const serviceName = service.label.toLowerCase()
-    const serviceUrl = (service.url ?? '').toLowerCase()
-
-    const matchesQuery = !query || serviceName.includes(query) || serviceUrl.includes(query)
-    const matchesTags = selectedTags.length === 0
-      || selectedTags.every(tag => service.tags.includes(tag))
+  return services.filter((service) => {
+    const matchesQuery = !query
+      || service.label.toLowerCase().includes(query)
+      || (service.url ?? '').toLowerCase().includes(query)
+      || (service.containers ?? []).some(container => container.toLowerCase().includes(query))
     const hasUrl = urlFilter.value ? service.url : true
 
-    return matchesQuery && matchesTags && hasUrl
+    return matchesQuery && hasUrl
   })
+})
 
-  const sorted = [...filtered]
-  sorted.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
+const tabItems = computed(() => [
+  { label: 'All', value: 'all', badge: servicesMatchingSearch.value.length },
+  ...availableTags.value.map(tag => ({
+    label: tag[0].toUpperCase() + tag.slice(1),
+    value: tag,
+    badge: servicesMatchingSearch.value.filter(service => service.tags.includes(tag)).length
+  }))
+])
 
-  return sorted
+const filteredServices = computed(() => {
+  const filtered = servicesMatchingSearch.value.filter(service =>
+    activeTag.value === 'all' || service.tags.includes(activeTag.value)
+  )
+
+  return [...filtered].sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
 })
 </script>
 
 <template>
   <UContainer>
-    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between my-4">
-      <UInput
-        v-model="searchQuery"
-        placeholder="Search services"
-        icon="i-heroicons-magnifying-glass"
-        class="md:max-w-sm"
+    <div class="my-4 space-y-3">
+      <UTabs
+        v-model="activeTag"
+        :items="tabItems"
+        :content="false"
+        size="sm"
+        :ui="{ list: 'overflow-x-auto', trigger: 'shrink-0 grow-0' }"
       />
 
-      <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <UCheckbox
-          v-model="urlFilter"
-          label="Has URL"
-        />
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <UInput
+          v-model="searchQuery"
+          placeholder="Search services"
+          aria-label="Search services"
+          icon="i-heroicons-magnifying-glass"
+          class="md:max-w-sm"
+        >
+          <template
+            v-if="searchQuery"
+            #trailing
+          >
+            <UButton
+              icon="i-lucide-x"
+              aria-label="Clear search"
+              variant="link"
+              color="neutral"
+              size="xs"
+              :padded="false"
+              @click="searchQuery = ''"
+            />
+          </template>
+        </UInput>
 
-        <USelectMenu
-          v-model="tagFilter"
-          :items="availableTags"
-          value-key="value"
-          multiple
-          placeholder="Filter by tag"
-          :disabled="availableTags.length === 0"
-        />
+        <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <UCheckbox
+            v-model="urlFilter"
+            label="Has URL"
+          />
+
+          <UButton
+            v-if="hasCustomFilters"
+            label="Reset filters"
+            icon="i-lucide-rotate-ccw"
+            variant="ghost"
+            color="neutral"
+            size="sm"
+            @click="resetFilters"
+          />
+        </div>
       </div>
     </div>
 
     <div
       v-if="filteredServices.length > 0"
-      class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start mt-4"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start mt-4"
     >
       <ServiceCard
         v-for="service in filteredServices"
@@ -79,9 +127,18 @@ const filteredServices = computed(() => {
     </div>
     <div
       v-else
-      class="rounded-lg border border-default/20 bg-default/5 p-6 text-sm text-default/70"
+      class="flex flex-col items-center gap-3 rounded-lg border border-default/20 bg-default/5 p-6 text-sm text-default/70"
     >
-      No services match the current filters.
+      <span>No services match the current filters.</span>
+      <UButton
+        v-if="hasCustomFilters"
+        label="Reset filters"
+        icon="i-lucide-rotate-ccw"
+        variant="soft"
+        color="neutral"
+        size="sm"
+        @click="resetFilters"
+      />
     </div>
   </UContainer>
 </template>
