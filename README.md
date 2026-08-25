@@ -1,43 +1,55 @@
 # Portal
 
-Portail personnel listant les services auto-hébergés (homelab) : recherche et filtre par tags.
+A personal homelab dashboard — a single page listing self-hosted services with search and
+tag filtering. Built with [Nuxt 4](https://nuxt.com) and [Nuxt UI](https://ui.nuxt.com).
 
-## Stack
+Runs behind [Traefik](https://traefik.io) on the internal network, not exposed publicly.
 
-- [Nuxt 4](https://nuxt.com) + [Nuxt UI](https://ui.nuxt.com) + Tailwind CSS
+## How it works
 
-## Services
+Services are plain data, not a database: `app/services.config.ts` is a hardcoded list
+(label, URL, container names, tags). Adding, editing, or removing a service means editing
+that file and redeploying — no API, no backend.
 
-Les services affichés sont définis en dur dans `app/services.config.ts` (label, url, containerName, tags). Pour ajouter, modifier ou retirer un service, on édite ce fichier et on redéploie — pas de base de données ni d'API.
+That file is gitignored so real hostnames never leave the machine it runs on. Copy the example
+to get started:
+
+```bash
+cp app/services.config.example.ts app/services.config.ts
+```
 
 ## Setup
-
-Installer les dépendances :
 
 ```bash
 pnpm install
 ```
 
-## Développement
+## Development
 
 ```bash
 pnpm dev
 ```
 
-Ou via Docker Compose :
+Or via Docker Compose:
 
 ```bash
 docker compose up
 ```
 
-L'app est servie sur `http://localhost:3000`.
+Served on `http://localhost:3000`.
+
+## Production
+
+```bash
+pnpm build
+pnpm preview
+```
+
+The `docker-compose.yml` builds the `production` image target and serves the compiled output —
+no source is mounted at runtime.
 
 ## Scripts
 
 - `pnpm lint` — ESLint
-- `pnpm typecheck` — vérification des types Nuxt/Vue
-- `pnpm build` / `pnpm preview` — build et prévisualisation de production
-
-## Déploiement
-
-Le portail n'est pas exposé publiquement — il tourne derrière Traefik sur le réseau interne (`portal.maelbelliard.fr`), accessible uniquement depuis le réseau local/VPN de l'auteur. Le `docker-compose.yml` construit l'image en cible `development` avec le code monté en volume.
+- `pnpm typecheck` — Nuxt/Vue type checking
+- `pnpm build` / `pnpm preview` — production build and preview

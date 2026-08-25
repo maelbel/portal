@@ -3,16 +3,10 @@ services:
     container_name: 'portal'
     build:
       context: .
-      target: development
+      target: production
     restart: unless-stopped
-    environment:
-      NODE_ENV: development
-      NODE_OPTIONS: "--max-old-space-size=512"
     ports:
       - "3000:3000"
-    volumes:
-      - ./:/app
-    tty: true
     networks:
       - proxy
     labels:
