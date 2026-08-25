@@ -12,6 +12,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
 # ---- build ----
 FROM dependencies AS build
 COPY --link . .
+RUN test -f app/services.config.ts || cp app/services.config.example.ts app/services.config.ts
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN pnpm run build
@@ -22,6 +23,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY --link . .
+RUN test -f app/services.config.ts || cp app/services.config.example.ts app/services.config.ts
 CMD [ "pnpm", "run", "dev" ]
 
 # ---- production ----
