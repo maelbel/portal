@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { ServiceConfig } from '~/services.config'
 
-const TAG_COLORS: Record<string, string> = {
+type TagColor = 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral'
+
+const TAG_COLORS: Record<string, TagColor> = {
   external: 'warning',
   internal: 'neutral',
   auth: 'error',

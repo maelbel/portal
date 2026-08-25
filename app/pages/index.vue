@@ -45,7 +45,7 @@ const servicesMatchingSearch = computed(() => {
 const tabItems = computed(() => [
   { label: 'All', value: 'all', badge: servicesMatchingSearch.value.length },
   ...availableTags.value.map(tag => ({
-    label: tag[0].toUpperCase() + tag.slice(1),
+    label: tag.charAt(0).toUpperCase() + tag.slice(1),
     value: tag,
     badge: servicesMatchingSearch.value.filter(service => service.tags.includes(tag)).length
   }))
