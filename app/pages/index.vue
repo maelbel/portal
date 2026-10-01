@@ -1,143 +1,120 @@
 <script setup lang="ts">
 import { services } from '~/services.config'
 
-const DEFAULT_TAG = 'all'
-
 const searchQuery = ref('')
-const activeTag = ref(DEFAULT_TAG)
-const urlFilter = ref<boolean>(true)
+const showHeadless = ref(false)
+const searchInput = useTemplateRef('searchInput')
 
-const hasCustomFilters = computed(() =>
-  searchQuery.value.trim() !== ''
-  || urlFilter.value !== true
-  || activeTag.value !== DEFAULT_TAG
-)
+const headlessCount = services.filter(service => !service.url).length
 
-const resetFilters = () => {
-  searchQuery.value = ''
-  activeTag.value = DEFAULT_TAG
-  urlFilter.value = true
-}
-
-const availableTags = computed(() => {
-  const tagSet = new Set<string>()
-  for (const service of services) {
-    for (const tag of service.tags) {
-      tagSet.add(tag)
-    }
-  }
-  return Array.from(tagSet).sort((a, b) => a.localeCompare(b))
+defineShortcuts({
+  '/': () => searchInput.value?.inputRef?.focus()
 })
 
-const servicesMatchingSearch = computed(() => {
+const visibleServices = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
 
   return services.filter((service) => {
-    const matchesQuery = !query
-      || service.label.toLowerCase().includes(query)
-      || (service.url ?? '').toLowerCase().includes(query)
-    const hasUrl = urlFilter.value ? service.url : true
+    if (!showHeadless.value && !service.url) return false
+    if (!query) return true
 
-    return matchesQuery && hasUrl
+    return [service.label, service.url ?? '', ...service.tags]
+      .some(value => value.toLowerCase().includes(query))
   })
 })
 
-const tabItems = computed(() => [
-  { label: 'All', value: 'all', badge: servicesMatchingSearch.value.length },
-  ...availableTags.value.map(tag => ({
-    label: tag.charAt(0).toUpperCase() + tag.slice(1),
-    value: tag,
-    badge: servicesMatchingSearch.value.filter(service => service.tags.includes(tag)).length
-  }))
-])
+const groups = computed(() => groupServices(visibleServices.value))
 
-const filteredServices = computed(() => {
-  const filtered = servicesMatchingSearch.value.filter(service =>
-    activeTag.value === 'all' || service.tags.includes(activeTag.value)
-  )
+// Enter in the filter opens the first match, so the page itself works as a launcher.
+const openFirstMatch = () => {
+  const first = groups.value.flatMap(group => group.services).find(service => service.url)
+  if (first?.url) window.open(first.url, '_blank', 'noopener')
+}
 
-  return [...filtered].sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
-})
+const resetFilters = () => {
+  searchQuery.value = ''
+  showHeadless.value = false
+}
 </script>
 
 <template>
-  <UContainer>
-    <div class="my-4 space-y-3">
-      <UTabs
-        v-model="activeTag"
-        :items="tabItems"
-        :content="false"
-        size="sm"
-        :ui="{ list: 'overflow-x-auto', trigger: 'shrink-0 grow-0' }"
-      />
-
-      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <UInput
-          v-model="searchQuery"
-          placeholder="Search services"
-          aria-label="Search services"
-          icon="i-heroicons-magnifying-glass"
-          class="md:max-w-sm"
-        >
-          <template
-            v-if="searchQuery"
-            #trailing
-          >
-            <UButton
-              icon="i-lucide-x"
-              aria-label="Clear search"
-              variant="link"
-              color="neutral"
-              size="xs"
-              :padded="false"
-              @click="searchQuery = ''"
-            />
-          </template>
-        </UInput>
-
-        <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <UCheckbox
-            v-model="urlFilter"
-            label="Has URL"
-          />
-
+  <UContainer class="py-6 sm:py-8">
+    <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <UInput
+        ref="searchInput"
+        v-model="searchQuery"
+        placeholder="Filter services"
+        aria-label="Filter services"
+        icon="i-lucide-list-filter"
+        size="lg"
+        variant="soft"
+        class="w-full sm:max-w-sm"
+        @keydown.enter="openFirstMatch"
+        @keydown.esc="searchQuery = ''"
+      >
+        <template #trailing>
           <UButton
-            v-if="hasCustomFilters"
-            label="Reset filters"
-            icon="i-lucide-rotate-ccw"
-            variant="ghost"
+            v-if="searchQuery"
+            icon="i-lucide-x"
+            aria-label="Clear filter"
+            variant="link"
             color="neutral"
-            size="sm"
-            @click="resetFilters"
+            size="xs"
+            @click="searchQuery = ''"
+          />
+          <UKbd
+            v-else
+            value="/"
+          />
+        </template>
+      </UInput>
+
+      <USwitch
+        v-if="headlessCount"
+        v-model="showHeadless"
+        :label="`Show background services (${headlessCount})`"
+        size="sm"
+      />
+    </div>
+
+    <div
+      v-if="groups.length"
+      class="gap-x-6 sm:columns-2 lg:columns-3"
+    >
+      <section
+        v-for="group in groups"
+        :key="group.name"
+        :aria-labelledby="`group-${group.name}`"
+        class="mb-8 break-inside-avoid"
+      >
+        <h2
+          :id="`group-${group.name}`"
+          class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted"
+        >
+          <UIcon
+            :name="group.icon"
+            class="size-4"
+          />
+          {{ group.name }}
+          <span class="font-normal text-dimmed">{{ group.services.length }}</span>
+        </h2>
+
+        <div class="flex flex-col gap-2">
+          <ServiceTile
+            v-for="service in group.services"
+            :key="service.label"
+            :service="service"
           />
         </div>
-      </div>
+      </section>
     </div>
 
-    <div
-      v-if="filteredServices.length > 0"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start mt-4"
-    >
-      <ServiceCard
-        v-for="service in filteredServices"
-        :key="service.label"
-        :service="service"
-      />
-    </div>
-    <div
+    <UEmpty
       v-else
-      class="flex flex-col items-center gap-3 rounded-lg border border-default/20 bg-default/5 p-6 text-sm text-default/70"
-    >
-      <span>No services match the current filters.</span>
-      <UButton
-        v-if="hasCustomFilters"
-        label="Reset filters"
-        icon="i-lucide-rotate-ccw"
-        variant="soft"
-        color="neutral"
-        size="sm"
-        @click="resetFilters"
-      />
-    </div>
+      icon="i-lucide-search-x"
+      title="No services match"
+      :description="searchQuery ? `Nothing matches “${searchQuery}”.` : 'No services to show.'"
+      :actions="[{ label: 'Reset filters', icon: 'i-lucide-rotate-ccw', color: 'neutral', variant: 'subtle', onClick: resetFilters }]"
+    />
   </UContainer>
 </template>

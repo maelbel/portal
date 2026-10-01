@@ -22,30 +22,57 @@ useSeoMeta({
   ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterCard: 'summary_large_image'
 })
+
+const launcherOpen = useState('launcher-open', () => false)
 </script>
 
 <template>
   <UApp>
     <UHeader
       :toggle="false"
-      :ui="{ right: 'gap-3' }"
+      :ui="{ center: 'flex', right: 'gap-1' }"
     >
       <template #left>
         <NuxtLink
           to="/"
-          class="flex items-center gap-4"
+          class="flex items-center gap-3"
         >
           <NuxtImg
             src="logo.png"
-            width="32"
-            height="32"
+            width="28"
+            height="28"
             alt="Logo"
           />
-          <span class="font-semibold">Portal - Homelab</span>
+          <span class="font-semibold tracking-tight text-highlighted">Portal</span>
         </NuxtLink>
       </template>
 
+      <UButton
+        icon="i-lucide-search"
+        label="Open a service…"
+        color="neutral"
+        variant="outline"
+        class="hidden w-72 text-muted lg:flex"
+        @click="launcherOpen = true"
+      >
+        <template #trailing>
+          <div class="ms-auto flex items-center gap-0.5">
+            <UKbd value="meta" />
+            <UKbd value="K" />
+          </div>
+        </template>
+      </UButton>
+
       <template #right>
+        <UButton
+          icon="i-lucide-search"
+          aria-label="Open a service"
+          color="neutral"
+          variant="ghost"
+          class="lg:hidden"
+          @click="launcherOpen = true"
+        />
+
         <UColorModeButton />
 
         <UButton
@@ -63,6 +90,6 @@ useSeoMeta({
       <NuxtPage />
     </UMain>
 
-    <UFooter />
+    <ServiceLauncher />
   </UApp>
 </template>
