@@ -15,6 +15,8 @@ that file and redeploying — no API, no backend.
 - **Icons** are optional Iconify names (`i-simple-icons-*` or `i-lucide-*`); without one, the
   category icon is used.
 - Services without a `url` are background services, hidden unless toggled on.
+- **Favorites** are starred per browser (stored in `localStorage`) and pinned at the top of the
+  page and of the launcher.
 
 ### Shortcuts
 

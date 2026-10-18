@@ -23,11 +23,19 @@ const visibleServices = computed(() => {
   })
 })
 
+const { isFavorite } = useFavorites()
+
+const favoriteServices = computed(() =>
+  visibleServices.value
+    .filter(isFavorite)
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+)
+
 const groups = computed(() => groupServices(visibleServices.value))
 
 // Enter in the filter opens the first match, so the page itself works as a launcher.
 const openFirstMatch = () => {
-  const first = groups.value.flatMap(group => group.services).find(service => service.url)
+  const first = [...favoriteServices.value, ...groups.value.flatMap(group => group.services)].find(service => service.url)
   if (first?.url) window.open(first.url, '_blank', 'noopener')
 }
 
@@ -38,8 +46,18 @@ const resetFilters = () => {
 </script>
 
 <template>
-  <UContainer class="py-6 sm:py-8">
-    <div class="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <UContainer class="pt-10 pb-16 sm:pt-16 sm:pb-26">
+    <div class="mb-10 grid gap-4">
+      <div class="flex items-baseline justify-between gap-4">
+        <span class="eyebrow text-primary">Homelab</span>
+        <span class="font-mono text-xs text-muted">{{ services.length }} services</span>
+      </div>
+      <h1 class="text-4xl font-medium tracking-[-0.01em] text-highlighted text-balance sm:text-5xl">
+        Everything running at home, one click away.
+      </h1>
+    </div>
+
+    <div class="mb-16 flex flex-col gap-4 border-y border-default py-4 sm:flex-row sm:items-center sm:justify-between">
       <UInput
         ref="searchInput"
         v-model="searchQuery"
@@ -47,7 +65,7 @@ const resetFilters = () => {
         aria-label="Filter services"
         icon="i-lucide-list-filter"
         size="lg"
-        variant="soft"
+        variant="outline"
         class="w-full sm:max-w-sm"
         @keydown.enter="openFirstMatch"
         @keydown.esc="searchQuery = ''"
@@ -77,6 +95,32 @@ const resetFilters = () => {
       />
     </div>
 
+    <section
+      v-if="favoriteServices.length"
+      aria-labelledby="group-favorites"
+      class="mb-16"
+    >
+      <h2
+        id="group-favorites"
+        class="mb-4 flex items-center gap-2 border-t border-primary pt-4 text-primary"
+      >
+        <UIcon
+          name="i-lucide-star"
+          class="size-4"
+        />
+        <span class="eyebrow">favorites</span>
+        <span class="ms-auto font-mono text-xs text-dimmed">{{ String(favoriteServices.length).padStart(2, '0') }}</span>
+      </h2>
+
+      <div class="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ServiceTile
+          v-for="service in favoriteServices"
+          :key="service.label"
+          :service="service"
+        />
+      </div>
+    </section>
+
     <div
       v-if="groups.length"
       class="gap-x-6 sm:columns-2 lg:columns-3"
@@ -85,18 +129,18 @@ const resetFilters = () => {
         v-for="group in groups"
         :key="group.name"
         :aria-labelledby="`group-${group.name}`"
-        class="mb-8 break-inside-avoid"
+        class="mb-10 break-inside-avoid"
       >
         <h2
           :id="`group-${group.name}`"
-          class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted"
+          class="mb-4 flex items-center gap-2 border-t border-default pt-4 text-muted"
         >
           <UIcon
             :name="group.icon"
             class="size-4"
           />
-          {{ group.name }}
-          <span class="font-normal text-dimmed">{{ group.services.length }}</span>
+          <span class="eyebrow">{{ group.name }}</span>
+          <span class="ms-auto font-mono text-xs text-dimmed">{{ String(group.services.length).padStart(2, '0') }}</span>
         </h2>
 
         <div class="flex flex-col gap-2">
@@ -116,5 +160,10 @@ const resetFilters = () => {
       :description="searchQuery ? `Nothing matches “${searchQuery}”.` : 'No services to show.'"
       :actions="[{ label: 'Reset filters', icon: 'i-lucide-rotate-ccw', color: 'neutral', variant: 'subtle', onClick: resetFilters }]"
     />
+
+    <footer class="mt-16 flex items-end justify-between gap-4">
+      <AppGradin />
+      <span class="font-mono text-xs text-dimmed">maelbelliard.fr</span>
+    </footer>
   </UContainer>
 </template>

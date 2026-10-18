@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CommandPaletteGroup, CommandPaletteItem } from '@nuxt/ui'
-import { services } from '~/services.config'
+import { services, type ServiceConfig } from '~/services.config'
 
 const open = useState('launcher-open', () => false)
 
@@ -10,22 +10,37 @@ defineShortcuts({
   }
 })
 
-const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() =>
-  groupServices(services.filter(service => service.url)).map(group => ({
-    id: group.name,
-    label: capitalize(group.name),
-    items: group.services.map(service => ({
-      label: service.label,
-      suffix: serviceHost(service),
-      icon: serviceIcon(service),
-      to: service.url,
-      target: '_blank',
-      onSelect: () => {
-        open.value = false
-      }
+const { isFavorite } = useFavorites()
+
+const toItem = (service: ServiceConfig): CommandPaletteItem => ({
+  label: service.label,
+  suffix: serviceHost(service),
+  icon: serviceIcon(service),
+  to: service.url,
+  target: '_blank',
+  onSelect: () => {
+    open.value = false
+  }
+})
+
+const groups = computed<CommandPaletteGroup<CommandPaletteItem>[]>(() => {
+  const launchable = services.filter(service => service.url)
+  const favorites = launchable
+    .filter(isFavorite)
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+
+  return [
+    // Distinct ids so a favorite can appear both here and in its category.
+    ...(favorites.length
+      ? [{ id: 'favorites', label: 'Favorites', items: favorites.map(service => ({ ...toItem(service), id: `favorite-${service.label}` })) }]
+      : []),
+    ...groupServices(launchable).map(group => ({
+      id: group.name,
+      label: capitalize(group.name),
+      items: group.services.map(toItem)
     }))
-  }))
-)
+  ]
+})
 </script>
 
 <template>

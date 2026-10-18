@@ -7,10 +7,12 @@ const SCOPE_TAGS = new Set(['internal', 'external'])
 const FALLBACK_GROUP = 'other'
 
 const GROUP_ICONS: Record<string, string> = {
+  ai: 'i-lucide-sparkles',
   auth: 'i-lucide-shield-check',
   finance: 'i-lucide-wallet',
   home: 'i-lucide-house',
   infra: 'i-lucide-server',
+  media: 'i-lucide-clapperboard',
   monitoring: 'i-lucide-activity',
   network: 'i-lucide-network',
   productivity: 'i-lucide-briefcase',
