@@ -1,18 +1,100 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* Follows the "Charte Mael Belliard" v1.0: ink, limestone and brass; Josefin Sans, Jost, JetBrains Mono. */
 @theme static {
-  --font-sans: 'Public Sans', sans-serif;
+  --font-sans: 'Jost', 'Futura', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-display: 'Josefin Sans', 'Futura', 'Century Gothic', sans-serif;
 
-  --color-green-50: #EFFDF5;
-  --color-green-100: #D9FBE8;
-  --color-green-200: #B3F5D1;
-  --color-green-300: #75EDAE;
-  --color-green-400: #00DC82;
-  --color-green-500: #00C16A;
-  --color-green-600: #00A155;
-  --color-green-700: #007F45;
-  --color-green-800: #016538;
-  --color-green-900: #0A5331;
-  --color-green-950: #052E16;
+  /* Brass is a single accent: the symbol's centre pillar and thin rules, never more than 5% of a view. */
+  --color-laiton: #B08D57;
+  --color-laiton-50: #F8F3EA;
+  --color-laiton-100: #EFE4D0;
+  --color-laiton-200: #E0CBA6;
+  --color-laiton-300: #C9A66B;
+  --color-laiton-400: #BD9861;
+  --color-laiton-500: #B08D57;
+  --color-laiton-600: #937442;
+  --color-laiton-700: #765A31;
+  --color-laiton-800: #5C4626;
+  --color-laiton-900: #42321B;
+  --color-laiton-950: #2A200F;
+}
+
+:root {
+  --ui-radius: 0.125rem;
+
+  /* Deep brass passes AA on limestone; plain brass is for shapes only. */
+  --ui-primary: #765A31;
+
+  --ui-bg: #F2EEE6;
+  --ui-bg-muted: #E9E4DA;
+  --ui-bg-elevated: #F7F5F0;
+  --ui-bg-accented: #DDD7CB;
+  --ui-bg-inverted: #0E0F11;
+
+  --ui-text-dimmed: #8A857C;
+  --ui-text-muted: #3A3F47;
+  --ui-text-toned: #2A2E34;
+  --ui-text: #0E0F11;
+  --ui-text-highlighted: #0E0F11;
+  --ui-text-inverted: #E9E4DA;
+
+  --ui-border: #CFC8BA;
+  --ui-border-muted: #DDD7CB;
+  --ui-border-accented: #A8A398;
+  --ui-border-inverted: #0E0F11;
+}
+
+.dark {
+  --ui-primary: #C9A66B;
+
+  --ui-bg: #0E0F11;
+  --ui-bg-muted: #16181B;
+  --ui-bg-elevated: #16181B;
+  --ui-bg-accented: #202328;
+  --ui-bg-inverted: #E9E4DA;
+
+  --ui-text-dimmed: #8A857C;
+  --ui-text-muted: #A8A398;
+  --ui-text-toned: #C9C4B8;
+  --ui-text: #E9E4DA;
+  --ui-text-highlighted: #F7F5F0;
+  --ui-text-inverted: #0E0F11;
+
+  --ui-border: #2A2D33;
+  --ui-border-muted: #202328;
+  --ui-border-accented: #3A3F47;
+  --ui-border-inverted: #E9E4DA;
+}
+
+body {
+  background: var(--ui-bg);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-laiton);
+  color: #0E0F11;
+}
+
+/* Eyebrow: Josefin Sans capitals with wide tracking, short texts only. */
+@utility eyebrow {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 0.78rem;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+@utility wordmark {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* Josefin's line box sits high; trim it to the capitals so flex centring lines up with icons. */
+  text-box: trim-both cap alphabetic;
 }

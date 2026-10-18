@@ -4,7 +4,9 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' }
+    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+    { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
+    { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }
   ],
   htmlAttrs: {
     lang: 'en'
@@ -37,13 +39,8 @@ const launcherOpen = useState('launcher-open', () => false)
           to="/"
           class="flex items-center gap-3"
         >
-          <NuxtImg
-            src="logo.png"
-            width="28"
-            height="28"
-            alt="Logo"
-          />
-          <span class="font-semibold tracking-tight text-highlighted">Portal</span>
+          <AppLogo class="h-7 w-auto shrink-0 text-highlighted" />
+          <span class="wordmark text-lg leading-none text-highlighted">Portal</span>
         </NuxtLink>
       </template>
 
